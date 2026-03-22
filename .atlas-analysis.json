@@ -1,0 +1,103 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Codeplain",
+  "projectDescription": "A CLI tool and AI-powered platform that generates production-ready software code from plain language specifications written in the ***plain specification language.",
+  "theme": "palm",
+  "primaryColor": "#1c1c1c",
+  "lightColor": "#e2fa6b",
+  "darkColor": "#747c40",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "The ***plain Language",
+            "pages": [
+              "plain-language/overview",
+              "plain-language/file-structure",
+              "plain-language/definitions",
+              "plain-language/functional-specs",
+              "plain-language/acceptance-tests",
+              "plain-language/modules"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/first-project",
+              "guides/project-structure",
+              "guides/standard-template-library",
+              "guides/testing",
+              "guides/custom-templates"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/config-yaml",
+              "configuration/environment-variables",
+              "configuration/logging"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI Reference",
+        "groups": [
+          {
+            "group": "Commands",
+            "pages": [
+              "cli/overview",
+              "cli/render",
+              "cli/options"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "cli/render-range",
+              "cli/headless-mode",
+              "cli/dry-run"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Generate production-ready code from plain language specifications",
+    "Support for Python, Golang, and React/TypeScript targets",
+    "Modular specification with imports and reusable templates",
+    "Automated unit test and conformance test generation",
+    "Interactive TUI for real-time render progress visualization",
+    "Headless mode for CI/CD pipeline integration",
+    "Standard template library for common app patterns",
+    "Incremental rendering with render range and render-from options"
+  ],
+  "publicApiSurface": [
+    "codeplain <filename.plain>",
+    "--render-range FRID[,FRID]",
+    "--render-from FRID",
+    "--force-render",
+    "--dry-run",
+    "--full-plain",
+    "--headless",
+    "--api-key API_KEY",
+    "--build-folder BUILD_FOLDER",
+    "--unittests-script SCRIPT",
+    "--conformance-tests-script SCRIPT",
+    "--template-dir TEMPLATE_DIR",
+    "--copy-build",
+    "--config-name CONFIG_NAME",
+    "config.yaml"
+  ]
+}
