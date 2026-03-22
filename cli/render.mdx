@@ -1,0 +1,108 @@
+---
+title: 'Render command'
+description: 'How the codeplain render workflow works — from reading your .plain file to writing generated code on disk.'
+---
+
+Running `codeplain <filename>` is the primary action you perform with the CLI. This page explains each stage of that workflow.
+
+## Synopsis
+
+```bash
+codeplain <filename> [options]
+```
+
+`filename` is the path to your `.plain` specification file. It is the only required argument.
+
+## Render workflow
+
+<Steps>
+  <Step title="Parse arguments and load config">
+    The CLI parses command-line flags and merges them with values from your `config.yaml` (if one is found). Command-line flags always win.
+  </Step>
+  <Step title="Validate API key">
+    The CLI checks that `CODEPLAIN_API_KEY` is set (or `--api-key` was provided) and calls the Codeplain API to verify the key and confirm the client version is not outdated.
+  </Step>
+  <Step title="Parse the .plain file">
+    The spec file is read and parsed into a source tree. Templates are resolved in the following order:
+    1. The directory containing the `.plain` file (highest priority).
+    2. A custom directory provided via `--template-dir`.
+    3. The built-in `standard_template_library`.
+  </Step>
+  <Step title="Compute render range (optional)">
+    If `--render-range` or `--render-from` was supplied, the list of FRIDs to render is narrowed to the requested subset. Without these flags, all functionalities are rendered.
+  </Step>
+  <Step title="Launch TUI and render modules">
+    A terminal user interface (TUI) launches and shows live progress. Each FRID is sent to the API, which returns generated source code that is written to the build folder.
+
+    In `--headless` mode the TUI is skipped; a single line is printed to stdout instead.
+  </Step>
+  <Step title="Run tests (if configured)">
+    After each module is generated, the CLI can run unit tests (`--unittests-script`) and conformance tests (`--conformance-tests-script`) automatically.
+  </Step>
+  <Step title="Copy build artifacts (if configured)">
+    If `--copy-build` is set, the contents of the build folder are copied to `--build-dest` (default: `dist`). Similarly, `--copy-conformance-tests` copies the conformance test folder to `--conformance-tests-dest`.
+  </Step>
+</Steps>
+
+## TUI interface
+
+By default, `codeplain` displays a live terminal UI while rendering. The TUI shows:
+
+- The current **Render ID** — a UUID that uniquely identifies this render session.
+- Per-FRID progress as each functionality is processed.
+- Log output streamed in real time.
+- Test results inline as tests are run.
+
+The Render ID is useful when contacting support — include it when reporting issues.
+
+<Tip>
+  To suppress the TUI entirely (for CI/CD or logging pipelines), use the `--headless` flag. See [Headless mode](/cli/headless-mode).
+</Tip>
+
+## Output directories
+
+| Path | Purpose |
+|------|---------|
+| `plain_modules/` | Generated source code (configurable with `--build-folder`). |
+| `codeplain.log` | Full render log written next to the `.plain` file. |
+| `dist/` | Optional copy destination when `--copy-build` is set. |
+| `conformance_tests/` | Conformance test files (configurable with `--conformance-tests-folder`). |
+| `dist_conformance_tests/` | Optional copy destination when `--copy-conformance-tests` is set. |
+
+## Template loading order
+
+When resolving template files, the CLI searches in this priority order:
+
+1. **Plain file directory** — drop custom templates here to override defaults without any extra flags.
+2. **`--template-dir`** — a secondary custom directory.
+3. **Built-in `standard_template_library`** — the defaults shipped with Codeplain.
+
+## Error handling
+
+The CLI surfaces distinct error types to help you diagnose failures quickly:
+
+| Error | Meaning |
+|-------|---------|
+| `MissingAPIKey` | No API key found. Set `CODEPLAIN_API_KEY` or use `--api-key`. |
+| `InvalidAPIKey` | The key was rejected by the API. |
+| `OutdatedClientVersion` | Your `codeplain` package is too old. Run `uv tool upgrade codeplain`. |
+| `InvalidFridArgument` | `--render-range` or `--render-from` references a FRID that does not exist. |
+| `PlainSyntaxError` | Your `.plain` file contains a syntax error. |
+| `MissingPreviousFunctionalitiesError` | A required earlier functionality has not been rendered yet. |
+| `CreditBalanceTooLow` | Your account has insufficient credits. |
+| `NetworkConnectionError` | Cannot reach the API. Check your internet connection. |
+| `InternalServerError` | Unexpected server-side error. Send `codeplain.log` to support@codeplain.ai. |
+
+When a crash occurs, the full log is dumped automatically to help with diagnosis. The log file path is always reported in the error output.
+
+## Logging
+
+Logs are written to `codeplain.log` by default (next to the `.plain` file). The log level, file name, and format are all configurable — see [All options](/cli/options) for details.
+
+## Forcing a re-render
+
+By default, modules that have already been rendered and whose spec has not changed are skipped. Use `--force-render` to re-render everything regardless of cached state.
+
+```bash
+codeplain myapp.plain --force-render
+```

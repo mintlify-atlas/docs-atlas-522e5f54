@@ -1,0 +1,207 @@
+---
+title: "Your first ***plain project"
+description: "A step-by-step guide to creating a new ***plain project from scratch, from writing your first .plain file to running generated code."
+---
+
+This guide walks you through creating your first ***plain project from scratch.
+
+<Note>
+  Before starting, make sure you have:
+  - Met all [prerequisites](/installation#prerequisites) (Python 3.11+)
+  - Completed the [installation steps](/installation)
+  - Set your `CODEPLAIN_API_KEY` environment variable
+</Note>
+
+## Project structure overview
+
+Every ***plain project follows this basic structure:
+
+```
+my-new-project/
+├── my_app.plain                          # Your application specification
+├── config.yaml                           # CLI configuration
+├── run_unittests_<language>.sh           # Unit test script
+├── run_conformance_tests_<language>.sh   # Conformance test script
+├── plain_modules/                        # Generated module source code
+├── conformance_tests/                    # Generated conformance test code
+└── dist/                                 # Final build output (when --copy-build is set)
+```
+
+The following steps show how to create each of these.
+
+## Steps
+
+<Steps>
+
+### Define your `.plain` file
+
+Create a `.plain` file that describes your application. This file is written in the ***plain specification language and contains your definitions, functional specs, and acceptance tests.
+
+The following example specifies an array sorting application:
+
+**`array_sorting.plain`**
+
+```plain
+---
+description: 'Example showing how to specify the array sorting problem'
+import:
+  - python-console-app-template
+---
+
+***definitions***
+- :Array: is an array of integers received as input.
+
+***functional specs***
+- :App: should be extended to receive :Array:
+- Sort :Array:
+- Display :Array:
+
+    ***acceptance tests***
+    - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+    - When given input "1 2 3 4 5", :App: should output "1 2 3 4 5"
+```
+
+The `import` field in the frontmatter pulls in a predefined template from the [Standard Template Library](/guides/standard-template-library). Here `python-console-app-template` provides the base specification for a Python console application — so you only need to describe what makes your app unique.
+
+<Tip>
+  See the [***plain language specification](https://www.plainlang.org/docs/) for the full syntax reference including definitions, functional specs, and acceptance tests.
+</Tip>
+
+### Add test scripts
+
+Copy the appropriate test scripts into your project directory. These shell scripts tell Codeplain how to run unit tests and conformance tests against the generated code.
+
+<Tabs>
+  <Tab title="Python">
+    ```bash
+    cp /path/to/plain2code_client/test_scripts/run_unittests_python.sh ./
+    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_python.sh ./
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```bash
+    cp /path/to/plain2code_client/test_scripts/run_unittests_golang.sh ./
+    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_golang.sh ./
+    ```
+  </Tab>
+  <Tab title="React (TypeScript)">
+    ```bash
+    cp /path/to/plain2code_client/test_scripts/run_unittests_react.sh ./
+    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_cypress.sh ./
+    ```
+  </Tab>
+</Tabs>
+
+You may need to modify these scripts to suit your project's specific requirements. See [Testing](/guides/testing) for details on how the scripts are invoked.
+
+### Configure `config.yaml`
+
+Create a `config.yaml` file in the same directory as your `.plain` file. This file configures the Codeplain CLI so you do not need to pass every option on the command line.
+
+```yaml
+unittests-script: ./run_unittests_python.sh
+conformance-tests-script: ./run_conformance_tests_python.sh
+copy-build: true
+build-dest: build
+verbose: true
+```
+
+Key settings:
+
+| Setting | Description |
+|---|---|
+| `unittests-script` | Path to the script that runs unit tests on the generated code |
+| `conformance-tests-script` | Path to the script that runs conformance tests |
+| `copy-build` | When `true`, copies the final build to `build-dest` after successful rendering |
+| `build-dest` | Destination folder for the final build (default: `dist`) |
+| `verbose` | When `true`, shows detailed output during code generation |
+
+<Note>
+  Codeplain looks for `config.yaml` in the directory containing your `.plain` file and in the current working directory. If both exist in different locations, Codeplain raises an error to avoid ambiguity. See [Configuration](/configuration/config-yaml) for all available options.
+</Note>
+
+### Generate and run your project
+
+With your `.plain` file, test scripts, and `config.yaml` in place, run:
+
+```bash
+codeplain my_app.plain
+```
+
+Codeplain will:
+
+1. Parse your `.plain` file and resolve any imported templates
+2. Call the Codeplain API to generate source code for each functional spec
+3. Run unit tests after each module is generated
+4. Run conformance tests to verify the generated code meets your acceptance tests
+5. Copy the final output to `build/` (because `copy-build: true` was set)
+
+<Tip>
+  Rendering takes a few minutes because each functional spec is sent to the Codeplain API. You can watch progress in real time with `verbose: true`.
+</Tip>
+
+Once rendering completes, run the generated application:
+
+```bash
+cd build
+python my_app.py
+```
+
+</Steps>
+
+## Hello World example
+
+The `examples/example_hello_world_python/` directory in the repository is the simplest possible project. Here is the full `.plain` file:
+
+```plain
+---
+description: '"hello, world" in Plain (Python version)'
+import:
+  - python-console-app-template
+---
+
+***implementation reqs***
+
+- :MainExecutableFile: of :App: should be called "hello_world.py".
+
+***functional specs***
+
+- Display "hello, world"
+
+  ***acceptance tests***
+
+  - :App: should exit with status code 0 indicating successful execution.
+  - :App: should complete execution in under 1 second.
+```
+
+And its `config.yaml`:
+
+```yaml
+unittests-script: ../../test_scripts/run_unittests_python.sh
+conformance-tests-script: ../../test_scripts/run_conformance_tests_python.sh
+verbose: true
+```
+
+Run it with:
+
+```bash
+cd examples/example_hello_world_python
+python ../../plain2code.py hello_world_python.plain
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Project structure" icon="folder-tree" href="/guides/project-structure">
+    Learn how Codeplain organizes generated files on disk.
+  </Card>
+  <Card title="Standard template library" icon="books" href="/guides/standard-template-library">
+    Explore the built-in templates available for Python, Go, and React.
+  </Card>
+  <Card title="Testing" icon="flask" href="/guides/testing">
+    Understand unit tests, conformance tests, and acceptance tests.
+  </Card>
+  <Card title="Custom templates" icon="wrench" href="/guides/custom-templates">
+    Create your own templates to reuse across projects.
+  </Card>
+</CardGroup>

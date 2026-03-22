@@ -1,0 +1,119 @@
+---
+title: 'Headless mode'
+description: 'Run Codeplain without the TUI in CI/CD pipelines using the --headless flag.'
+---
+
+By default, `codeplain` launches an interactive terminal user interface (TUI) that shows live rendering progress and log output. In automated environments — CI/CD pipelines, container jobs, or scripts — there is no terminal to host the TUI, and its output would pollute logs.
+
+The `--headless` flag disables the TUI and all Rich console output, writing everything to the log file instead.
+
+## Behavior in headless mode
+
+When `--headless` is set:
+
+- The TUI is not started.
+- Rich console output is suppressed (`console.quiet = True`).
+- A single line is printed to stdout when the render begins:
+  ```
+  Render started. Render ID: <uuid>
+  ```
+- All structured logs are written to the log file (`codeplain.log` by default).
+
+<Note>
+  The Render ID printed to stdout uniquely identifies the session. Capture it from your pipeline if you need to correlate runs or report an issue to support.
+</Note>
+
+## Usage
+
+```bash
+codeplain myapp.plain --headless
+```
+
+Combine with `--log-file-name` to control where the log is written:
+
+```bash
+codeplain myapp.plain --headless --log-file-name render.log
+```
+
+Capture the Render ID from stdout in a shell script:
+
+```bash
+RENDER_OUTPUT=$(codeplain myapp.plain --headless)
+RENDER_ID=$(echo "$RENDER_OUTPUT" | grep 'Render ID:' | awk '{print $NF}')
+echo "Render ID: $RENDER_ID"
+```
+
+## CI/CD examples
+
+<Tabs>
+  <Tab title="GitHub Actions">
+```yaml
+- name: Render plain spec
+  env:
+    CODEPLAIN_API_KEY: ${{ secrets.CODEPLAIN_API_KEY }}
+  run: |
+    codeplain myapp.plain --headless --log-file-name codeplain.log
+
+- name: Upload render log
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: codeplain-log
+    path: codeplain.log
+```
+  </Tab>
+  <Tab title="GitLab CI">
+```yaml
+render:
+  stage: build
+  script:
+    - codeplain myapp.plain --headless --log-file-name codeplain.log
+  artifacts:
+    when: always
+    paths:
+      - codeplain.log
+  variables:
+    CODEPLAIN_API_KEY: $CODEPLAIN_API_KEY
+```
+  </Tab>
+  <Tab title="Shell script">
+```bash
+#!/bin/bash
+set -e
+
+export CODEPLAIN_API_KEY="your_api_key"
+
+echo "Starting render..."
+codeplain myapp.plain --headless --log-file-name render.log
+
+echo "Render complete. Log at render.log"
+```
+  </Tab>
+</Tabs>
+
+## Log file in headless mode
+
+Because no output goes to the terminal, the log file is your only window into what happened. The log is written in append mode and includes:
+
+- API connection checks.
+- Per-FRID render progress and status.
+- Test results (if `--unittests-script` or `--conformance-tests-script` are configured).
+- Full error tracebacks on failure.
+
+<Warning>
+  If `--no-log-to-file` is set alongside `--headless`, there will be no record of the render output beyond the single stdout line. Avoid this combination in production pipelines.
+</Warning>
+
+## Combining with other flags
+
+Headless mode is compatible with all other flags:
+
+```bash
+# Headless render of a specific range, with a custom log location
+codeplain myapp.plain \
+  --headless \
+  --render-range 3,7 \
+  --log-file-name ci-render.log \
+  --copy-build \
+  --build-dest dist
+```

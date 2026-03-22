@@ -1,0 +1,102 @@
+---
+title: 'CLI overview'
+description: 'Install the Codeplain CLI and render your first .plain file to working code.'
+---
+
+The Codeplain CLI (`codeplain`) reads a `.plain` specification file and calls the Codeplain API to generate the corresponding source code. Each functional requirement in your spec — identified by a **Functionality Render ID (FRID)** — is rendered in order into a module folder on disk.
+
+## Installation
+
+```bash
+pip install codeplain
+```
+
+Verify the installation:
+
+```bash
+codeplain --help
+```
+
+## Authentication
+
+The CLI requires an API key. Set it as an environment variable before running any render:
+
+```bash
+export CODEPLAIN_API_KEY=your_api_key_here
+```
+
+Alternatively, pass it directly with `--api-key`.
+
+## Basic usage
+
+```bash
+codeplain myapp.plain
+```
+
+This command:
+
+1. Reads and validates `myapp.plain`.
+2. Connects to the Codeplain API and verifies your key.
+3. Renders each functional requirement in sequence.
+4. Writes the generated files to the `plain_modules/` folder.
+5. Optionally runs your unit and conformance tests after each module is rendered.
+
+## Quick examples
+
+```bash
+# Render the entire spec
+codeplain myapp.plain
+
+# Render only functionality #3
+codeplain myapp.plain --render-range 3
+
+# Resume from functionality #5 onwards
+codeplain myapp.plain --render-from 5
+
+# Preview what would be rendered (no API calls)
+codeplain myapp.plain --dry-run
+
+# Run without interactive TUI (for CI/CD)
+codeplain myapp.plain --headless
+```
+
+## Configuration file
+
+You can store commonly used flags in a `config.yaml` file placed in the same directory as your `.plain` file or in the current working directory. Command-line flags always take precedence over config file values.
+
+Default config file name: `config.yaml` (override with `--config-name`).
+
+## Output structure
+
+By default, rendered modules are written to `plain_modules/` relative to the `.plain` file. A log file (`codeplain.log`) is also written to the same directory.
+
+```
+your-project/
+├── myapp.plain
+├── config.yaml
+├── codeplain.log
+└── plain_modules/
+    ├── module_1/
+    ├── module_2/
+    └── ...
+```
+
+## Pages in this section
+
+<Columns cols={2}>
+  <Card title="Render command" icon="play" href="/cli/render">
+    Full details of what happens when you run `codeplain myapp.plain`.
+  </Card>
+  <Card title="All options" icon="sliders" href="/cli/options">
+    Complete reference for every CLI flag, grouped by category.
+  </Card>
+  <Card title="Render range" icon="list-ordered" href="/cli/render-range">
+    Render a subset of functionalities with `--render-range` and `--render-from`.
+  </Card>
+  <Card title="Headless mode" icon="terminal" href="/cli/headless-mode">
+    Suppress the TUI for CI/CD pipelines with `--headless`.
+  </Card>
+  <Card title="Dry run" icon="eye" href="/cli/dry-run">
+    Preview renders without making changes using `--dry-run` and `--full-plain`.
+  </Card>
+</Columns>

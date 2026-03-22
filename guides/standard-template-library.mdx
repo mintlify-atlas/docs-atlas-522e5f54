@@ -1,0 +1,272 @@
+---
+title: "Standard template library"
+description: "The built-in ***plain templates available in Codeplain — what each template defines, how to import it, and when to use each one."
+---
+
+The standard template library (STL) ships with Codeplain and provides reusable ***plain specifications for common application types. Instead of re-specifying language, runtime, and testing requirements in every project, you import a template and focus only on your application's unique logic.
+
+## How templates work
+
+A template is a `.plain` file that contains `***definitions***`, `***implementation reqs***`, and `***test reqs***` sections. When you import a template, its contents are merged into your `.plain` file before code generation.
+
+To import a template, add its name (without the `.plain` extension) to the `import` list in your file's YAML frontmatter:
+
+```plain
+---
+description: 'My application'
+import:
+  - python-console-app-template
+---
+
+***functional specs***
+- Display "hello, world"
+```
+
+## Available templates
+
+<CardGroup cols={2}>
+  <Card title="python-console-app-template" icon="python">
+    Python console application with Unittest-based tests
+  </Card>
+  <Card title="golang-console-app-template" icon="code">
+    Go console application with Go's built-in testing package
+  </Card>
+  <Card title="typescript-react-app-template" icon="react">
+    TypeScript React web application with Cypress conformance tests
+  </Card>
+  <Card title="typescript-react-app-boilerplate" icon="layer-group">
+    Extends the React template and adds an app entry point
+  </Card>
+</CardGroup>
+
+---
+
+## `python-console-app-template`
+
+Use this template for any Python console application. It defines the application type, specifies Python as the implementation language, and sets up the Unittest framework for both unit tests and conformance tests.
+
+**Full template content:**
+
+```plain
+***definitions***
+
+- :App: is a console application.
+
+- :MainExecutableFile: is the main executable code file of :App:.
+
+
+***implementation reqs***
+
+- :Implementation: should be in Python.
+
+- :Implementation: should include :UnitTests: using Unittest framework! If :UnitTests: are put
+  in the subfolder, make sure to include __init__.py to make them discoverable.
+
+***test reqs***
+
+- :ConformanceTests: of :App: should be implemented in Python using Unittest framework.
+  :ConformanceTests: will be run using "python -m unittest discover" command. Therefore,
+  if :ConformanceTests: are put in the subfolder, make sure to include __init__.py to make
+  them discoverable.
+
+- :ConformanceTests: must be implemented and executed - do not use unittest.skip() or any
+  other test skipping functionality.
+
+- The current working directory contains :MainExecutableFile:.
+
+- :App: can be executed using the command "python :MainExecutableFile:".
+```
+
+**What it sets up:**
+- `:App:` as a console application
+- `:MainExecutableFile:` as the main entry point
+- Python as the implementation language
+- `unittest` for unit tests (with `__init__.py` discovery support)
+- `python -m unittest discover` for conformance tests
+
+**Pair with:** `run_unittests_python.sh` and `run_conformance_tests_python.sh`
+
+**Example usage:**
+
+```plain
+---
+description: 'Array sorting application'
+import:
+  - python-console-app-template
+---
+
+***implementation reqs***
+- :MainExecutableFile: of :App: should be called "sort_array.py".
+
+***functional specs***
+- :App: should receive an array of integers as input
+- Sort the array in ascending order
+- Display the sorted array
+```
+
+---
+
+## `golang-console-app-template`
+
+Use this template for Go console applications. It defines the application type, specifies Go as the implementation language, and uses Go's built-in `testing` package for unit tests and a standalone `conformance_tests.go` file for conformance tests.
+
+**Full template content:**
+
+```plain
+***definitions***
+
+- :App: is a console application.
+
+- :MainExecutableFile: is the main executable code file of :App:.
+
+- :ConformanceTestsExecutableFile: is the main executable code file of :ConformanceTests:.
+
+
+***implementation reqs***
+
+- :Implementation: should be in Go lang.
+
+- :Implementation: should include unit tests using Go's built-in testing package.
+
+
+***test reqs***
+
+- :ConformanceTests: should be implemented in Go lang.
+
+- :ConformanceTestsExecutableFile: should be called "conformance_tests.go".
+
+- :ConformanceTests: will be executed using the command
+  "go run <conformance tests folder>/conformance_tests.go" from a folder that
+  contains :MainExecutableFile:.
+
+- Before :ConformanceTests: are executed, "go get" will be executed in the folder
+  containing :MainExecutableFile:.
+
+- Before :ConformanceTests: are executed, "go get" will be executed in
+  <conformance tests folder>.
+
+- :App: can be executed using the command "go run".
+```
+
+**What it sets up:**
+- `:App:` as a console application
+- `:MainExecutableFile:` and `:ConformanceTestsExecutableFile:` definitions
+- Go as the implementation language
+- Go's built-in `testing` package for unit tests
+- `go run conformance_tests.go` for conformance tests (with `go get` run beforehand)
+
+**Pair with:** `run_unittests_golang.sh` and `run_conformance_tests_golang.sh`
+
+**Example usage:**
+
+```plain
+---
+description: '"hello, world" in Plain (Go lang version)'
+import:
+  - golang-console-app-template
+---
+
+***implementation reqs***
+- :MainExecutableFile: of :App: should be called "hello_world.go".
+
+***functional specs***
+- Display "hello, world"
+```
+
+---
+
+## `typescript-react-app-template`
+
+Use this template for TypeScript React web applications. It configures React + TypeScript on Node.js, sets the app to run on port 3000, and sets up Cypress for conformance tests.
+
+**Full template content:**
+
+```plain
+***definitions***
+
+- :App: is a web application.
+
+
+***implementation reqs***
+
+- :App: should be implemented in TypeScript, using React as a web framework.
+
+- :App: will run on Node.js as the runtime environment.
+
+- :App: should run on port 3000.
+
+- The start script should be added to the package.json file.
+
+***test reqs***
+
+- :ConformanceTests: of :App: should be written in TypeScript, using Cypress as the
+  framework for :ConformanceTests:.
+
+- The following configuration should be added:
+  - The appropriate include section should be added to tsconfig.json file.
+  - The cypress.config.mjs file should use the 'cypress' package.
+  - The typescript package should be added to the devDependencies in package.json
+```
+
+**What it sets up:**
+- `:App:` as a web application
+- TypeScript + React on Node.js
+- Port 3000 as the default listen port
+- `npm start` script in `package.json`
+- Cypress for conformance tests with the required `tsconfig.json` and `cypress.config.mjs` configuration
+
+**Pair with:** `run_unittests_react.sh` and `run_conformance_tests_cypress.sh`
+
+<Note>
+  The Cypress conformance test script (`run_conformance_tests_cypress.sh`) starts the React app on port 3000, waits for it to be ready, then runs Cypress in headless Chrome mode.
+</Note>
+
+---
+
+## `typescript-react-app-boilerplate`
+
+This template extends `typescript-react-app-template` and adds a single functional spec to implement the application entry point. Use it when you want a ready-to-run React app scaffold without writing the entry point spec yourself.
+
+**Full template content:**
+
+```plain
+---
+import:
+  - typescript-react-app-template
+---
+
+***functional specs***
+
+- Implement the entry point for :App:.
+```
+
+**What it adds on top of `typescript-react-app-template`:**
+- A functional spec that generates the app's entry point (e.g., `index.tsx` or `App.tsx`)
+
+**Example usage:**
+
+```plain
+---
+description: 'My React dashboard'
+import:
+  - typescript-react-app-boilerplate
+---
+
+***functional specs***
+- :App: should display a dashboard with a title "My Dashboard"
+- :App: should show a list of recent activity items
+```
+
+<Tip>
+  Use `typescript-react-app-boilerplate` instead of `typescript-react-app-template` when you want Codeplain to also generate the application's entry point. Use `typescript-react-app-template` directly when you want full control over the entry point spec.
+</Tip>
+
+## Template loading order
+
+When Codeplain resolves a template name, it searches directories in this order:
+
+1. **Directory containing the `.plain` file** — highest precedence; place custom templates here to override built-in ones
+2. **Custom template directory** — specified via `--template-dir`; for shared templates across projects
+3. **Built-in `standard_template_library/` directory** — lowest precedence; the templates documented on this page
+
+This means you can override any built-in template by creating a file with the same name in your project directory. See [Custom templates](/guides/custom-templates) for details.

@@ -1,0 +1,61 @@
+---
+title: 'Environment variables'
+description: 'Environment variables recognized by Codeplain, including API key configuration.'
+---
+
+Codeplain reads a small set of environment variables at startup. You can also pass most settings directly as CLI flags or set them in `config.yaml` — see [config.yaml](/configuration/config-yaml) for details.
+
+## Variables
+
+<ParamField path="CODEPLAIN_API_KEY" type="string" required>
+  Your Codeplain API key. This is the primary way to authenticate with the Codeplain API.
+
+  Codeplain checks for this variable automatically. If neither this variable nor `--api-key` is set, the render will fail with a missing API key error.
+</ParamField>
+
+## Setting the API key
+
+### Using an environment variable (recommended)
+
+Export `CODEPLAIN_API_KEY` in your shell before running `codeplain`:
+
+```bash
+export CODEPLAIN_API_KEY=your_api_key_here
+codeplain my_app.plain
+```
+
+For a persistent setup, add the `export` line to your shell profile (e.g. `~/.bashrc`, `~/.zshrc`).
+
+### Using the CLI flag
+
+Pass the key directly with `--api-key`:
+
+```bash
+codeplain my_app.plain --api-key your_api_key_here
+```
+
+<Warning>
+Avoid passing secrets as CLI arguments in shared or logged environments. Prefer the environment variable approach.
+</Warning>
+
+### Using config.yaml
+
+You can also set the key in `config.yaml`:
+
+```yaml
+api-key: your_api_key_here
+```
+
+<Warning>
+Do not commit your API key to version control. Add `config.yaml` to `.gitignore` if it contains your key, or use the environment variable approach instead.
+</Warning>
+
+## Precedence
+
+When multiple sources provide an API key, the following precedence applies:
+
+```
+--api-key (CLI flag)  >  api-key (config.yaml)  >  CODEPLAIN_API_KEY (environment variable)
+```
+
+The CLI flag always wins, making it easy to override the key for a single run without changing your environment or config file.

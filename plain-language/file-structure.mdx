@@ -1,0 +1,153 @@
+---
+title: "File structure"
+description: "The anatomy of a .plain file — frontmatter, section headings, and how everything fits together."
+---
+
+A `.plain` file is a structured text file combining YAML frontmatter and Markdown-like content. Every `.plain` file follows the same layout: an optional frontmatter block followed by one or more named sections.
+
+## File extension
+
+Plain files always use the `.plain` extension. The filename (without extension) becomes the module name.
+
+```
+my_app.plain          → module name: my_app
+array_sorting.plain   → module name: array_sorting
+```
+
+## Frontmatter
+
+The frontmatter block is optional YAML delimited by `---`. It controls metadata and module directives.
+
+```plain
+---
+description: 'Short description of what this file specifies'
+import:
+  - python-console-app-template
+requires:
+  - my_data_module
+required_concepts:
+  - SomeConcept
+exported_concepts:
+  - AnotherConcept
+---
+```
+
+### Frontmatter fields
+
+| Field | Type | Description |
+|---|---|---|
+| `description` | string | Human-readable description of the module |
+| `import` | list of strings | Template names to import from the Standard Template Library |
+| `requires` | list of strings | Module names this file depends on (for multi-module projects) |
+| `required_concepts` | list | Concepts this module expects to be defined externally |
+| `exported_concepts` | list | Concepts this module makes available to modules that `require` it |
+
+<Note>
+  `import` pulls in template content (definitions, implementation reqs, test reqs) from the Standard Template Library. `requires` declares a dependency on another module whose generated code must exist first.
+</Note>
+
+## Section headings
+
+The body of a `.plain` file is divided into named sections using bold-italic triple-asterisk markers:
+
+```plain
+***definitions***
+***implementation reqs***
+***test reqs***
+***functional specs***
+***acceptance tests***
+```
+
+<Warning>
+  Section heading syntax is exact. `***definitions***` must be written exactly as shown — lowercase, no extra spaces, surrounded by triple asterisks on both sides. Any deviation is a syntax error.
+</Warning>
+
+### Section order rules
+
+- `***definitions***` must appear **before** any other section in the same file
+- Each section heading may only appear **once** per file
+- `***acceptance tests***` is not a top-level section — it appears **nested inside** a functional requirement list item
+
+### Which sections are allowed where
+
+| Section | Top-level `.plain` file | Imported template | Inside a functional requirement |
+|---|---|---|---|
+| `***definitions***` | Yes | Yes | No |
+| `***implementation reqs***` | Yes | Yes | No |
+| `***test reqs***` | Yes | Yes | No |
+| `***functional specs***` | Yes | No | No |
+| `***acceptance tests***` | No | No | Yes |
+
+## Section content
+
+Each section contains a Markdown list. Every list item is a single requirement or definition.
+
+```plain
+***definitions***
+
+- :App: is a console application.
+- :MainExecutableFile: is the main executable code file of :App:.
+
+***functional specs***
+
+- Display "hello, world"
+```
+
+<Tip>
+  List items can span multiple lines using standard Markdown indentation. Sub-lists and nested content are supported inside functional requirement items (for acceptance tests).
+</Tip>
+
+## Annotated complete example
+
+Here is a fully annotated `.plain` file:
+
+```plain array_sorting.plain
+---
+# Frontmatter: YAML metadata and directives
+description: 'Example showing how to specify the array sorting problem'
+import:
+  - python-console-app-template  # Pulls in Python app definitions + reqs
+---
+
+# Definitions section: named concepts used throughout the file
+***definitions***
+- :Array: is an array of integers received as input.
+
+# Functional specs: what the application must do
+***functional specs***
+- :App: should be extended to receive :Array:
+- Sort :Array:
+- Display :Array:
+
+    # Acceptance tests: nested under the functional requirement above
+    ***acceptance tests***
+    - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+    - When given input "1 2 3 4 5", :App: should output "1 2 3 4 5"
+```
+
+<Note>
+  The `***acceptance tests***` block above is indented and nested inside the third `***functional specs***` list item (`- Display :Array:`). Only that requirement gets the acceptance tests.
+</Note>
+
+## What the Standard Template Library provides
+
+When you `import` a template, its sections are merged into your file before parsing. For example, `python-console-app-template` provides:
+
+```plain python-console-app-template.plain
+***definitions***
+
+- :App: is a console application.
+- :MainExecutableFile: is the main executable code file of :App:.
+
+***implementation reqs***
+
+- :Implementation: should be in Python.
+- :Implementation: should include :UnitTests: using Unittest framework!
+
+***test reqs***
+
+- :ConformanceTests: of :App: should be implemented in Python using Unittest framework.
+- :App: can be executed using the command "python :MainExecutableFile:".
+```
+
+Your file's own `***definitions***`, `***implementation reqs***`, and `***test reqs***` sections are merged with the imported content, giving the LLM the full picture it needs to generate your code.

@@ -1,0 +1,180 @@
+---
+title: "Custom templates"
+description: "How to create custom ***plain template files, where to place them, and how the template loading order lets you override built-in templates."
+---
+
+The [Standard Template Library](/guides/standard-template-library) covers common application types, but you can create your own templates to encode project-specific conventions, custom frameworks, or shared requirements across multiple `.plain` files.
+
+## What is a template?
+
+A template is a plain `.plain` file that contains reusable ***plain sections — `***definitions***`, `***implementation reqs***`, and/or `***test reqs***`. When another `.plain` file imports a template, the template's contents are merged in before code generation.
+
+Templates do **not** need a YAML frontmatter block. A minimal template looks like this:
+
+```plain
+***definitions***
+
+- :App: is a REST API service.
+- :Database: is a PostgreSQL database used by :App:.
+
+***implementation reqs***
+
+- :Implementation: should be in Python using FastAPI.
+- :Implementation: should use SQLAlchemy for database access.
+- :Implementation: should include type annotations throughout.
+
+***test reqs***
+
+- :ConformanceTests: should be implemented using pytest.
+- :ConformanceTests: will be run using the command "pytest".
+```
+
+Save this file as `fastapi-service-template.plain` and import it in any project that needs a FastAPI service.
+
+## Importing a custom template
+
+Add the template name (without `.plain`) to the `import` list in your `.plain` file's frontmatter:
+
+```plain
+---
+description: 'User management API'
+import:
+  - fastapi-service-template
+---
+
+***functional specs***
+- :App: should expose a GET /users endpoint that returns a list of users
+- :App: should expose a POST /users endpoint that creates a new user
+```
+
+Templates can themselves import other templates. For example, `typescript-react-app-boilerplate` imports `typescript-react-app-template`:
+
+```plain
+---
+import:
+  - typescript-react-app-template
+---
+
+***functional specs***
+- Implement the entry point for :App:.
+```
+
+## Template loading order
+
+When Codeplain resolves a template name, it searches these directories **in order**, using the first match found:
+
+<Steps>
+
+### Directory containing the `.plain` file
+
+Highest precedence. Any `.plain` file in the same folder as your project's `.plain` file is found first. This is the easiest way to add a project-specific template — just place it next to your `.plain` file:
+
+```
+my-project/
+├── my_app.plain
+├── my-custom-template.plain    ← found here first
+└── config.yaml
+```
+
+### Custom template directory (`--template-dir`)
+
+If you have templates shared across multiple projects, point `--template-dir` at a directory containing them:
+
+```bash
+codeplain my_app.plain --template-dir /shared/templates
+```
+
+Or in `config.yaml`:
+
+```yaml
+template-dir: /shared/templates
+```
+
+Templates in this directory are found after the project directory but before the built-in library.
+
+### Built-in `standard_template_library/`
+
+Lowest precedence. The four built-in templates (`python-console-app-template`, `golang-console-app-template`, `typescript-react-app-template`, `typescript-react-app-boilerplate`) live here and are used only if no match was found in the higher-precedence locations.
+
+</Steps>
+
+## Overriding a built-in template
+
+Because project-local files take precedence, you can override any built-in template by creating a file with the same name in your project directory.
+
+For example, to override `python-console-app-template` with a version that uses `pytest` instead of `unittest`:
+
+1. Create `python-console-app-template.plain` in your project directory:
+
+```plain
+***definitions***
+
+- :App: is a console application.
+- :MainExecutableFile: is the main executable code file of :App:.
+
+***implementation reqs***
+
+- :Implementation: should be in Python.
+- :Implementation: should include :UnitTests: using pytest framework.
+
+***test reqs***
+
+- :ConformanceTests: of :App: should be implemented in Python using pytest.
+- :ConformanceTests: will be run using the "pytest" command.
+- The current working directory contains :MainExecutableFile:.
+- :App: can be executed using the command "python :MainExecutableFile:".
+```
+
+2. Your `.plain` file continues to import `python-console-app-template` as usual — Codeplain picks up your local version automatically:
+
+```plain
+---
+import:
+  - python-console-app-template   ← resolves to your local override
+---
+```
+
+<Warning>
+  When you override a built-in template, make sure your custom version provides all the `***definitions***` and `***test reqs***` that the generated code will depend on. Missing definitions can cause code generation errors.
+</Warning>
+
+## Template authoring tips
+
+<AccordionGroup>
+  <Accordion title="Keep templates focused">
+    A template should encode a single concern — a language choice, a framework convention, or a testing approach. Combining unrelated concerns makes templates harder to reuse and override.
+  </Accordion>
+
+  <Accordion title="Use descriptive definition names">
+    Template definitions like `:App:`, `:MainExecutableFile:`, and `:Database:` become part of the vocabulary available in every `.plain` file that imports the template. Choose names that read naturally in plain English sentences.
+  </Accordion>
+
+  <Accordion title="Document test runner commands explicitly">
+    The `***test reqs***` section should state the exact command used to run tests (e.g., `"python -m unittest discover"`, `"pytest"`, `"go test"`). Codeplain uses this to generate correct conformance test code.
+  </Accordion>
+
+  <Accordion title="Compose templates with imports">
+    Templates can import other templates. Use this to build layered templates — for example, a `fastapi-auth-service-template` can import `fastapi-service-template` and add authentication-specific requirements on top.
+  </Accordion>
+</AccordionGroup>
+
+## Example: shared corporate template
+
+If your organization standardizes on specific coding conventions, create a shared template and store it in a central location:
+
+```
+/shared/company-templates/
+├── company-python-app-template.plain
+├── company-go-service-template.plain
+└── company-react-frontend-template.plain
+```
+
+Reference the directory in each project's `config.yaml`:
+
+```yaml
+template-dir: /shared/company-templates
+unittests-script: ./run_unittests_python.sh
+conformance-tests-script: ./run_conformance_tests_python.sh
+```
+
+All projects sharing this config will use the organization's templates automatically, while still allowing individual projects to override specific templates by placing a same-named file locally.

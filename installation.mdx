@@ -1,0 +1,181 @@
+---
+title: Installation
+description: Install the Codeplain CLI, configure your API key, and verify the setup.
+---
+
+## System requirements
+
+- **Python 3.11** (exactly — the package declares `requires-python = "==3.11"`)
+- macOS or Linux
+
+<Warning>
+  **Windows users:** Codeplain is not natively supported on Windows. Install [WSL (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install) and run all commands inside a WSL terminal.
+</Warning>
+
+## Install the CLI
+
+Choose one of the methods below.
+
+### Option 1: pip install (recommended)
+
+Install the `codeplain` package from PyPI:
+
+```bash
+pip install codeplain
+```
+
+This registers the `codeplain` command on your `PATH`.
+
+<Tip>
+  Use a virtual environment to keep the installation isolated:
+
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install codeplain
+  ```
+</Tip>
+
+### Option 2: uv tool install
+
+If you use [uv](https://docs.astral.sh/uv/), install codeplain as a global tool:
+
+```bash
+uv tool install codeplain
+```
+
+To upgrade later:
+
+```bash
+uv tool upgrade codeplain
+```
+
+### Option 3: install from source
+
+Clone the repository and install dependencies manually:
+
+```bash
+git clone https://github.com/Codeplain-ai/plain2code_client.git
+cd plain2code_client
+
+# (Recommended) create a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+When running from source, invoke the CLI via the `plain2code.py` entry point:
+
+```bash
+python plain2code.py yourfile.plain
+```
+
+The `codeplain` command alias is only registered when installing via pip or uv.
+
+### One-line installer (bash)
+
+The repository ships a convenience script that installs `uv` if needed, installs codeplain, and walks you through API key setup interactively:
+
+```bash
+bash <(curl -fsSL https://codeplain.ai/install.sh)
+```
+
+## Set up your API key
+
+Codeplain requires an API key to call the code generation service. To get a key, contact [support@codeplain.ai](mailto:support@codeplain.ai) or sign up at [platform.codeplain.ai](https://platform.codeplain.ai).
+
+### Set the environment variable
+
+Export `CODEPLAIN_API_KEY` in your shell:
+
+```bash
+export CODEPLAIN_API_KEY="your_api_key_here"
+```
+
+To make this permanent, add it to your shell's RC file:
+
+<CodeGroup>
+
+```bash ~/.bashrc
+export CODEPLAIN_API_KEY="your_api_key_here"
+```
+
+```bash ~/.zshrc
+export CODEPLAIN_API_KEY="your_api_key_here"
+```
+
+</CodeGroup>
+
+Then reload your shell:
+
+```bash
+source ~/.bashrc   # or ~/.zshrc
+```
+
+### Pass the key as a flag
+
+If you prefer not to use an environment variable, pass the key directly on each invocation:
+
+```bash
+codeplain yourfile.plain --api-key "your_api_key_here"
+```
+
+<Warning>
+  Avoid committing your API key to version control. Use the environment variable approach and add `.env` files to your `.gitignore`.
+</Warning>
+
+## Verify the installation
+
+Confirm the CLI is installed and accessible:
+
+```bash
+codeplain --help
+```
+
+You should see output similar to:
+
+```
+usage: codeplain [-h] [--verbose] [--base-folder BASE_FOLDER]
+                 [--build-folder BUILD_FOLDER] ...
+                 filename
+
+Render plain code to target code.
+```
+
+To verify your API key is accepted, run a dry run against any `.plain` file:
+
+```bash
+codeplain yourfile.plain --dry-run
+```
+
+A dry run parses and previews the render plan without sending anything to the API or modifying files.
+
+## Python version troubleshooting
+
+Codeplain requires exactly Python 3.11. If your system has a different default version:
+
+```bash
+# Check your current version
+python --version
+
+# Install Python 3.11 via pyenv
+pyenv install 3.11
+pyenv local 3.11
+
+# Or use uv to pin the version
+uv python install 3.11
+uv tool install codeplain --python 3.11
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run the hello world example and see generated code in minutes.
+  </Card>
+  <Card title="Introduction" icon="book-open" href="/introduction">
+    Learn the key concepts behind ***plain and how Codeplain works.
+  </Card>
+</CardGroup>

@@ -1,0 +1,91 @@
+---
+title: 'Render range'
+description: 'Render a specific subset of functionalities using --render-range or resume from a FRID with --render-from.'
+---
+
+By default, `codeplain` renders every functional requirement in your `.plain` file from start to finish. Two flags let you narrow that to a subset: `--render-range` and `--render-from`.
+
+## Functionality Render IDs (FRIDs)
+
+Every functional requirement in a `.plain` file is assigned a **Functionality Render ID (FRID)**. FRIDs are integers for top-level requirements and dotted strings for requirements inside named sections:
+
+| Spec location | FRID |
+|---------------|------|
+| Top-level requirement #1 | `1` |
+| Top-level requirement #3 | `3` |
+| Section "auth", requirement #2 | `auth.2` |
+| Section "payments", requirement #1 | `payments.1` |
+
+FRIDs are assigned in the order the requirements appear in the file. The CLI uses these IDs to know which modules to render and in what order.
+
+<Note>
+  FRIDs must match exactly what appears in your `.plain` file. If you supply a FRID that does not exist, the CLI exits with an `InvalidFridArgument` error and lists the valid IDs.
+</Note>
+
+## `--render-range`
+
+Renders a contiguous range of functionalities. The range is **inclusive** of both endpoints.
+
+```bash
+# Render only functionality #3
+codeplain myapp.plain --render-range 3
+
+# Render functionalities #2 through #5 (inclusive)
+codeplain myapp.plain --render-range 2,5
+```
+
+### Format
+
+- A single FRID: `"3"` — renders only that one functionality.
+- Two FRIDs separated by a comma: `"2,5"` — renders functionalities 2, 3, 4, and 5.
+- No spaces are allowed around the comma.
+
+### Validation rules
+
+- Both the start and end FRIDs must exist in the spec.
+- The start FRID must come before the end FRID in the file.
+- At most two FRIDs may be provided (more than two is an error).
+
+## `--render-from`
+
+Renders from the given FRID to the end of the specification. Use this to resume a partial render.
+
+```bash
+# Resume from functionality #4 onwards (renders 4, 5, 6, ...)
+codeplain myapp.plain --render-from 4
+```
+
+The specified FRID is **included** in the render.
+
+## Mutual exclusion
+
+`--render-range` and `--render-from` are mutually exclusive. Passing both flags at the same time is an error.
+
+## Combining with `--dry-run`
+
+Both flags work with `--dry-run`, letting you preview which FRIDs would be rendered before committing to an API call:
+
+```bash
+codeplain myapp.plain --render-range 2,5 --dry-run
+```
+
+## When to use each flag
+
+| Scenario | Recommended flag |
+|----------|------------------|
+| Render a single functionality for rapid iteration | `--render-range <frid>` |
+| Render a slice of the spec (e.g., a feature group) | `--render-range <start>,<end>` |
+| A render was interrupted; resume where it stopped | `--render-from <frid>` |
+| Re-run everything from a certain point after a spec change | `--render-from <frid>` |
+
+<Tip>
+  After a failed or interrupted render, use `--render-from` with the FRID that failed to pick up exactly where things stopped, rather than re-rendering functionalities that already succeeded.
+</Tip>
+
+## Implementation details
+
+Internally, FRIDs are resolved against the parsed `.plain` source tree using `plain_spec.get_frids()`, which yields FRIDs in document order. Both `--render-range` and `--render-from` slice this ordered list:
+
+- `--render-range start,end` → `frids[start_idx : end_idx + 1]`
+- `--render-range single` → `frids[idx : idx + 1]`
+- `--render-from start` → `frids[start_idx :]`

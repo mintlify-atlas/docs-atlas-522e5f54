@@ -1,0 +1,162 @@
+---
+title: 'config.yaml'
+description: 'Configure Codeplain using a config.yaml file to avoid repeating CLI flags on every run.'
+---
+
+Codeplain supports a `config.yaml` file so you can set your preferred options once and reuse them across every render. All CLI flags can be set in this file using their kebab-case names.
+
+## File lookup
+
+Codeplain searches for `config.yaml` in two locations, in this order:
+
+1. The directory containing your `.plain` file
+2. The current working directory (where you run `codeplain`)
+
+<Warning>
+If a config file exists in **both** locations with different content, Codeplain raises an `AmbiguousConfigFileError` and stops. Remove the config file from one of the locations to resolve the ambiguity.
+</Warning>
+
+## Precedence
+
+CLI arguments always take precedence over values set in `config.yaml`. This lets you override any config option at runtime without editing the file.
+
+```
+CLI argument  >  config.yaml  >  built-in default
+```
+
+## Example config.yaml
+
+```yaml
+# Test scripts
+unittests-script: ./run_unittests_python.sh
+conformance-tests-script: ./run_conformance_tests_python.sh
+
+# Build output
+copy-build: true
+build-dest: build
+
+# Output
+verbose: true
+```
+
+## Changing the config file name
+
+You can use a different filename by passing `--config-name` on the CLI or setting it in... the config file itself. This is useful when you manage multiple configurations in the same directory.
+
+```bash
+codeplain my_app.plain --config-name staging.yaml
+```
+
+## All supported options
+
+Every option below corresponds to a CLI flag of the same name (with `--` prefix). Use the kebab-case key directly in `config.yaml`.
+
+### General
+
+<ParamField path="verbose" type="boolean" default="false">
+  Enable verbose output. Equivalent to `--verbose` / `-v`.
+</ParamField>
+
+<ParamField path="base-folder" type="string">
+  Base folder for build files. When set, all generated output is placed inside this folder.
+</ParamField>
+
+<ParamField path="build-folder" type="string" default="plain_modules">
+  Folder where generated module code is written. Cannot be the same as `build-dest`.
+</ParamField>
+
+<ParamField path="config-name" type="string" default="config.yaml">
+  Name of the config file to look for. Looked up in the plain file directory and the current working directory.
+</ParamField>
+
+<ParamField path="headless" type="boolean" default="false">
+  Run without the TUI. No terminal output is shown except a single render-started message. All logs are written to the log file.
+</ParamField>
+
+### Rendering
+
+<ParamField path="render-range" type="string">
+  Render a specific range of functionalities, e.g. `"1,5"` to render functionalities 1 through 5 (inclusive), or `"3"` to render only functionality 3. Mutually exclusive with `render-from`.
+</ParamField>
+
+<ParamField path="render-from" type="string">
+  Continue generation from a specific functionality ID onwards, e.g. `"2"`. The functionality with that ID is included. Mutually exclusive with `render-range`.
+</ParamField>
+
+<ParamField path="force-render" type="boolean" default="false">
+  Force re-render of all required modules, even those that have not changed.
+</ParamField>
+
+### Testing
+
+<ParamField path="unittests-script" type="string">
+  Path to the shell script that runs unit tests on the generated code. The script receives the build folder path as its first argument. Can be an absolute path or a path relative to the config file.
+</ParamField>
+
+<ParamField path="conformance-tests-folder" type="string" default="conformance_tests">
+  Folder containing conformance test files.
+</ParamField>
+
+<ParamField path="conformance-tests-script" type="string">
+  Path to the shell script that runs conformance tests. The script receives two arguments: the path to the generated source code folder and the path to the conformance tests subfolder. Can be an absolute path or a path relative to the config file.
+</ParamField>
+
+<ParamField path="prepare-environment-script" type="string">
+  Path to a shell script that prepares the testing environment. The script receives the source code folder path as its first argument. Can be an absolute path or a path relative to the config file.
+</ParamField>
+
+<ParamField path="test-script-timeout" type="number" default="120">
+  Timeout in seconds for test scripts.
+</ParamField>
+
+### API
+
+<ParamField path="api" type="string" default="https://api.codeplain.ai">
+  Base URL of the Codeplain API. Override this when using a private or staging API endpoint.
+</ParamField>
+
+<ParamField path="api-key" type="string">
+  API key used to authenticate with the Codeplain API. If not set here, Codeplain reads the `CODEPLAIN_API_KEY` environment variable. See [Environment variables](/configuration/environment-variables).
+</ParamField>
+
+### Templates
+
+<ParamField path="template-dir" type="string">
+  Path to a custom template directory. Templates are resolved in the following order:
+
+  1. Directory containing the `.plain` file
+  2. The directory set by this option
+  3. The built-in `standard_template_library`
+</ParamField>
+
+### Build output copying
+
+<ParamField path="copy-build" type="boolean" default="false">
+  Copy rendered build output from `build-folder` to `build-dest` after a successful render.
+</ParamField>
+
+<ParamField path="build-dest" type="string" default="dist">
+  Target directory to copy the rendered build output to. Only used when `copy-build` is `true`. Cannot be the same as `build-folder`.
+</ParamField>
+
+<ParamField path="copy-conformance-tests" type="boolean" default="false">
+  Copy conformance tests from `conformance-tests-folder` to `conformance-tests-dest` after a successful render. Requires `conformance-tests-script` to be set.
+</ParamField>
+
+<ParamField path="conformance-tests-dest" type="string" default="dist_conformance_tests">
+  Target directory to copy conformance tests to. Only used when `copy-conformance-tests` is `true`. Cannot be the same as `conformance-tests-folder`.
+</ParamField>
+
+### Logging
+
+<ParamField path="log-to-file" type="boolean" default="true">
+  Enable logging to a file. Set to `false` to disable file logging. See [Logging](/configuration/logging).
+</ParamField>
+
+<ParamField path="log-file-name" type="string" default="codeplain.log">
+  Name of the log file. Always resolved relative to the directory containing the `.plain` file. Cannot be used when `log-to-file` is `false`.
+</ParamField>
+
+<ParamField path="logging-config-path" type="string" default="logging_config.yaml">
+  Path to a custom logging configuration file in Python `dictConfig` format. See [Logging](/configuration/logging).
+</ParamField>

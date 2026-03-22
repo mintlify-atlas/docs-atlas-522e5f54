@@ -1,0 +1,155 @@
+---
+title: "Project structure"
+description: "How a Codeplain project is organized on disk — what each folder and file does, and how plain_modules/, conformance_tests/, and dist/ relate to each other."
+---
+
+Codeplain projects follow a predictable directory layout. Understanding this layout helps you know where to find generated code, where to place custom templates, and how to configure the build pipeline.
+
+## Full directory layout
+
+```
+my-project/
+├── my_app.plain                  # Application specification (source of truth)
+├── config.yaml                   # CLI configuration file
+│
+├── run_unittests_python.sh       # Unit test script (copied from test_scripts/)
+├── run_conformance_tests_python.sh  # Conformance test script
+│
+├── plain_modules/                # Generated module source code (build cache)
+│   └── my_app/                   # One subfolder per .plain module
+│       ├── my_app.py             # Generated application source files
+│       ├── test_my_app.py        # Generated unit tests
+│       └── ...                   # Other generated files
+│
+├── conformance_tests/            # Generated conformance test code
+│   └── my_app/                   # One subfolder per .plain module
+│       └── test_conformance.py   # Generated conformance tests
+│
+├── dist/                         # Final build output (copy of plain_modules/<module>)
+│   ├── my_app.py
+│   └── ...
+│
+└── codeplain.log                 # Render log (auto-generated)
+```
+
+## Key files and folders
+
+### `.plain` file
+
+Your application specification — the source of truth for code generation. Every Codeplain project has at least one `.plain` file. The file name (without the `.plain` extension) becomes the **module name** and determines subfolder names inside `plain_modules/` and `conformance_tests/`.
+
+For example, `array_sorting.plain` produces:
+- `plain_modules/array_sorting/`
+- `conformance_tests/array_sorting/`
+
+### `config.yaml`
+
+The CLI configuration file. Codeplain searches for it in:
+1. The directory containing the `.plain` file
+2. The current working directory
+
+If the file exists in both locations (and they differ), Codeplain raises an error. You can change the file name with the `--config-name` CLI argument. See [Configuration](/configuration/config-yaml) for all options.
+
+### Test scripts
+
+Shell scripts that Codeplain calls to validate generated code. The repository ships with ready-to-use scripts in `test_scripts/`:
+
+| Script | Language | Purpose |
+|---|---|---|
+| `run_unittests_python.sh` | Python | Runs `python -m unittest discover` |
+| `run_conformance_tests_python.sh` | Python | Runs conformance tests via `unittest discover` |
+| `run_unittests_golang.sh` | Go | Runs `go test` |
+| `run_conformance_tests_golang.sh` | Go | Runs `go run conformance_tests.go` |
+| `run_unittests_react.sh` | TypeScript/React | Runs `npm test` |
+| `run_conformance_tests_cypress.sh` | TypeScript/React | Starts the app and runs Cypress |
+
+Copy the scripts you need into your project directory and reference them in `config.yaml`.
+
+### `plain_modules/` — the build cache
+
+**Default name:** `plain_modules` (configurable via `--build-folder`)
+
+This is where Codeplain writes generated source code during rendering. Each `.plain` module gets its own subfolder:
+
+```
+plain_modules/
+└── my_app/
+    ├── my_app.py
+    ├── tests/
+    │   ├── __init__.py
+    │   └── test_my_app.py
+    └── ...
+```
+
+Codeplain also stores internal metadata here (in a hidden `.codeplain/` subfolder) to track which functionalities have already been rendered. This acts as a build cache — if a functionality has not changed, Codeplain skips re-rendering it on the next run.
+
+<Warning>
+  Do not manually edit files inside `plain_modules/`. Codeplain manages this folder. Changes will be overwritten on the next render.
+</Warning>
+
+### `conformance_tests/` — generated test code
+
+**Default name:** `conformance_tests` (configurable via `--conformance-tests-folder`)
+
+When a `conformance-tests-script` is configured, Codeplain generates conformance test code here alongside the source code. Structure mirrors `plain_modules/`:
+
+```
+conformance_tests/
+└── my_app/
+    └── test_conformance.py
+```
+
+Conformance tests are derived from the `***acceptance tests***` sections in your `.plain` file.
+
+### `dist/` — final build output
+
+**Default name:** `dist` (configurable via `--build-dest`)
+
+When `copy-build: true` is set in `config.yaml` (or `--copy-build` on the CLI), Codeplain copies the contents of the generated module folder from `plain_modules/<module>/` to `dist/` after a successful render. This gives you a clean output folder without the Codeplain metadata.
+
+```
+dist/
+├── my_app.py
+└── tests/
+    ├── __init__.py
+    └── test_my_app.py
+```
+
+<Note>
+  `--build-folder` and `--build-dest` cannot be set to the same value. Similarly, `--conformance-tests-folder` and `--conformance-tests-dest` cannot be identical.
+</Note>
+
+### `codeplain.log`
+
+**Default name:** `codeplain.log` (configurable via `--log-file-name`)
+
+Codeplain writes a detailed render log here after each run. Always resolved relative to the `.plain` file's directory. Logging to file is enabled by default; disable it with `--no-log-to-file`.
+
+## How `plain_modules/` and `dist/` relate
+
+```
+.plain file
+    │
+    ▼
+[Codeplain renders]
+    │
+    ├─► plain_modules/<module>/   ← working copy with metadata
+    │
+    └─► dist/                     ← clean copy (only when copy-build: true)
+```
+
+`plain_modules/` is the primary output of every render. `dist/` is simply a clean copy of the module's output folder, suitable for deployment or further processing. Both `plain_modules/<module>/` and `dist/` contain identical source files — the difference is that `plain_modules/` also contains internal Codeplain metadata.
+
+## Multi-module projects
+
+When your `.plain` file imports another `.plain` module (via the `import` field in the frontmatter), Codeplain renders each required module first. Each module gets its own subfolder in `plain_modules/` and `conformance_tests/`:
+
+```
+plain_modules/
+├── shared_utils/     # Required module rendered first
+│   └── ...
+└── my_app/           # Main module rendered after its dependencies
+    └── ...
+```
+
+See [Modules](/plain-language/modules) for how to structure multi-module projects.

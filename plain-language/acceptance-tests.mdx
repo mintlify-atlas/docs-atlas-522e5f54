@@ -1,0 +1,125 @@
+---
+title: "Acceptance tests"
+description: "Writing acceptance tests in ***plain — how they nest under functional requirements and how Codeplain uses them for conformance testing."
+---
+
+Acceptance tests let you specify exactly how a functional requirement should be verified. They are written as list items nested inside the functional requirement they belong to, under a `***acceptance tests***` subsection heading.
+
+## Placement and syntax
+
+Acceptance tests are **not** a top-level section. They appear **inside** a functional requirement list item:
+
+```plain
+***functional specs***
+
+- Display "hello, world"
+
+  ***acceptance tests***
+
+  - :App: should exit with status code 0 indicating successful execution.
+  - :App: should complete execution in under 1 second.
+```
+
+The `***acceptance tests***` heading must be:
+
+- Written exactly as shown — lowercase, triple-asterisk on both sides
+- Placed as a paragraph **after** the requirement's own text, within the same list item
+- Followed immediately by a Markdown list of test items
+
+<Warning>
+  The heading is `***acceptance tests***` (plural). Writing `***acceptance test***` (singular) or any other variation is a syntax error.
+</Warning>
+
+## Indentation
+
+Because acceptance tests are nested inside a list item, they must be indented to the same level as the list item content:
+
+```plain
+***functional specs***
+
+- Sort :Array:                          ← functional requirement (FRID 2)
+- Display :Array:                       ← functional requirement (FRID 3)
+
+    ***acceptance tests***              ← belongs to FRID 3
+    - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+    - When given input "1 2 3 4 5", :App: should output "1 2 3 4 5"
+```
+
+In this example, the acceptance tests are attached to the `Display :Array:` requirement (FRID `3`), not to `Sort :Array:` (FRID `2`).
+
+## What to write in acceptance tests
+
+Acceptance tests describe the observable behavior the generated code must exhibit. Write them as concrete, verifiable scenarios:
+
+<CardGroup cols={2}>
+  <Card title="Good acceptance test" icon="circle-check">
+    When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+  </Card>
+  <Card title="Good acceptance test" icon="circle-check">
+    :App: should exit with status code 0 indicating successful execution.
+  </Card>
+</CardGroup>
+
+Effective acceptance tests are:
+
+- **Specific** — describe exact inputs and expected outputs
+- **Observable** — the result can be checked programmatically
+- **Self-contained** — each test stands alone without relying on others
+
+## One block per requirement
+
+Each functional requirement can have **at most one** `***acceptance tests***` block. Attempting to add a second block to the same list item is a syntax error.
+
+There is no limit on the number of test items within a block:
+
+```plain
+- Display sorted results
+
+  ***acceptance tests***
+  - When given input "3 1 2", output is "1 2 3"
+  - When given input "5", output is "5"
+  - When given an empty input, output is an empty line
+  - :App: exits with status code 0
+```
+
+## Linked resources in acceptance tests
+
+Like functional requirements, individual acceptance test items can include linked resources using Markdown link syntax:
+
+```plain
+  ***acceptance tests***
+  - Response body matches [the expected schema](./fixtures/response_schema.json)
+```
+
+Codeplain attaches the linked file's contents to the acceptance test when generating conformance test code.
+
+## How Codeplain uses acceptance tests
+
+When Codeplain generates code for a FRID, it also generates conformance tests for that FRID's acceptance test items. These conformance tests are placed in the `conformance_tests/` directory of your project and run as part of the test suite.
+
+The conformance test harness executes your generated application with the inputs specified in the acceptance tests and verifies the outputs match expectations.
+
+## Full example
+
+```plain hello_world_python.plain
+---
+description: '"hello, world" in Plain (Python version)'
+import:
+  - python-console-app-template
+---
+
+***implementation reqs***
+
+- :MainExecutableFile: of :App: should be called "hello_world.py".
+
+***functional specs***
+
+- Display "hello, world"
+
+  ***acceptance tests***
+
+  - :App: should exit with status code 0 indicating successful execution.
+  - :App: should complete execution in under 1 second.
+```
+
+This file has one functional requirement (FRID `1`: Display "hello, world") with two acceptance tests. Codeplain generates both the application code and the conformance tests that verify these two criteria.

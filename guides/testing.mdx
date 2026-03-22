@@ -1,0 +1,226 @@
+---
+title: "Testing"
+description: "How unit tests, conformance tests, and acceptance tests work in Codeplain — including test scripts, the prepare-environment script, and timeout configuration."
+---
+
+Codeplain validates generated code through three levels of testing: **unit tests**, **conformance tests**, and **acceptance tests**. Understanding how each level works helps you configure your project correctly and debug test failures.
+
+## Testing overview
+
+<CardGroup cols={3}>
+  <Card title="Unit tests" icon="vial">
+    Run inside the generated module to verify individual functions and classes.
+  </Card>
+  <Card title="Conformance tests" icon="circle-check">
+    Run against the generated app to verify it meets acceptance criteria from your `.plain` file.
+  </Card>
+  <Card title="Acceptance tests" icon="list-check">
+    Defined inline in your `.plain` file under `***acceptance tests***`. Codeplain generates conformance test code from them.
+  </Card>
+</CardGroup>
+
+## Acceptance tests
+
+Acceptance tests are written directly in your `.plain` file, nested under a functional spec:
+
+```plain
+***functional specs***
+- Sort :Array:
+- Display :Array:
+
+    ***acceptance tests***
+    - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+    - When given input "1 2 3 4 5", :App: should output "1 2 3 4 5"
+```
+
+Codeplain reads these acceptance tests and generates conformance test code (placed in `conformance_tests/<module>/`) that verifies the generated application satisfies them. The format and framework of the generated tests is determined by the template you import — for example, `python-console-app-template` generates Python `unittest` tests.
+
+## Unit tests
+
+Unit tests are generated alongside source code inside `plain_modules/<module>/`. They verify the internal logic of the generated code.
+
+### Configuring the unit test script
+
+Specify the path to your unit test script in `config.yaml`:
+
+```yaml
+unittests-script: ./run_unittests_python.sh
+```
+
+Or pass it on the command line:
+
+```bash
+codeplain my_app.plain --unittests-script ./run_unittests_python.sh
+```
+
+The script receives the **build folder path** (e.g., `plain_modules/my_app`) as its first argument `$1`.
+
+### Available unit test scripts
+
+<Accordion title="run_unittests_python.sh">
+  Runs `python -m unittest discover` inside a clean copy of the build folder.
+
+  ```bash
+  # Usage (called automatically by Codeplain):
+  ./run_unittests_python.sh plain_modules/my_app
+  ```
+
+  The script:
+  1. Creates a working copy at `python_<module>/`
+  2. Runs `python -m unittest discover -b` inside it
+  3. Returns the exit code from `unittest`
+
+  <Note>
+    Test files must follow the `unittest` discovery pattern (`test*.py` by default). Include `__init__.py` in any subdirectory containing tests.
+  </Note>
+</Accordion>
+
+<Accordion title="run_unittests_golang.sh">
+  Runs `go test` inside a clean copy of the build folder.
+
+  ```bash
+  # Usage (called automatically by Codeplain):
+  ./run_unittests_golang.sh plain_modules/my_app
+  ```
+
+  The script:
+  1. Creates a working copy at `go_<module>/`
+  2. Runs `go get` to fetch dependencies
+  3. Runs `go test`
+</Accordion>
+
+<Accordion title="run_unittests_react.sh">
+  Runs `npm test` inside a clean copy of the build folder.
+
+  ```bash
+  # Usage (called automatically by Codeplain):
+  ./run_unittests_react.sh plain_modules/my_app
+  ```
+
+  The script:
+  1. Creates a working copy at `node_<module>/` (preserving `node_modules/` and `package-lock.json`)
+  2. Runs `npm install`
+  3. Runs `npm test -- --runInBand --silent --detectOpenHandles`
+</Accordion>
+
+## Conformance tests
+
+Conformance tests verify that the generated application behaves correctly end-to-end. They are generated from the `***acceptance tests***` sections in your `.plain` file and placed in `conformance_tests/<module>/`.
+
+### Configuring the conformance test script
+
+Specify the path to your conformance test script in `config.yaml`:
+
+```yaml
+conformance-tests-script: ./run_conformance_tests_python.sh
+```
+
+The script receives **two arguments**:
+1. Path to the generated source code folder (e.g., `plain_modules/my_app`)
+2. Path to the conformance tests subfolder (e.g., `conformance_tests/my_app`)
+
+```bash
+./run_conformance_tests_python.sh plain_modules/my_app conformance_tests/my_app
+```
+
+### Conformance tests folder
+
+The default folder for generated conformance test code is `conformance_tests/` (configurable via `--conformance-tests-folder`). When `--copy-conformance-tests` is set, Codeplain copies the conformance tests to `dist_conformance_tests/` (configurable via `--conformance-tests-dest`) after a successful render.
+
+### Available conformance test scripts
+
+<Accordion title="run_conformance_tests_python.sh">
+  Runs Python conformance tests using `python -m unittest discover`.
+
+  The script:
+  1. Creates a working copy of the build folder at `python_<module>/`
+  2. Runs `python -m unittest discover -b -s <conformance_tests_folder>` from inside the working copy
+  3. Fails with exit code 1 if no tests are discovered ("Ran 0 tests")
+
+  <Warning>
+    The script exits with an error if zero tests are found. This prevents silent failures where the test runner succeeds vacuously.
+  </Warning>
+</Accordion>
+
+<Accordion title="run_conformance_tests_golang.sh">
+  Runs Go conformance tests by executing `conformance_tests.go`.
+
+  The script:
+  1. Creates a working copy of the build folder at `go_<module>/`
+  2. Runs `go get` in the build folder and in the conformance tests folder
+  3. Runs `go run <conformance_tests_folder>/conformance_tests.go` from inside the build folder
+
+  The conformance test entry point must be named `conformance_tests.go` (as required by `golang-console-app-template`).
+</Accordion>
+
+<Accordion title="run_conformance_tests_cypress.sh">
+  Runs Cypress end-to-end tests against the React application.
+
+  The script:
+  1. Kills any existing Node server on port 3000
+  2. Creates a working copy of the build folder at `node_<module>/`
+  3. Runs `npm install`, `npm run build`, and starts the React app in the background
+  4. Waits until the app is reachable on port 3000
+  5. Installs Cypress and runs `npx cypress run --browser=chrome --config video=false`
+  6. Cleans up all background processes on exit
+</Accordion>
+
+## Prepare environment script
+
+Some projects require environment setup (installing dependencies, creating databases, seeding data) before tests can run. Use the `--prepare-environment-script` option:
+
+```yaml
+prepare-environment-script: ./prepare_env.sh
+```
+
+The script receives the **source code folder path** as its first argument `$1`. It is run once before unit tests and conformance tests.
+
+```bash
+#!/bin/bash
+# Example: prepare_env.sh
+cd "$1"
+pip install -r requirements.txt
+```
+
+## Test timeouts
+
+By default, test scripts time out after **120 seconds**. You can override this with `--test-script-timeout` (in seconds):
+
+```yaml
+test-script-timeout: 300
+```
+
+Or on the command line:
+
+```bash
+codeplain my_app.plain --test-script-timeout 300
+```
+
+<Note>
+  If a test script times out, Codeplain treats it as a test failure. The unit test scripts include an explicit timeout check and exit with code `124` on timeout.
+</Note>
+
+## Exit codes
+
+Test scripts must follow this exit code convention:
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Tests passed |
+| `1` | Tests failed (recoverable — Codeplain retries code generation) |
+| `69` | Unrecoverable error (missing interpreter, missing folder, etc.) — Codeplain stops immediately |
+| `124` | Script timed out |
+
+The `69` exit code (`UNRECOVERABLE_ERROR_EXIT_CODE`) is used by all bundled test scripts to signal that a hard prerequisite is missing and retrying will not help.
+
+## Configuration summary
+
+```yaml
+# config.yaml
+unittests-script: ./run_unittests_python.sh
+conformance-tests-script: ./run_conformance_tests_python.sh
+prepare-environment-script: ./prepare_env.sh   # optional
+test-script-timeout: 120                        # seconds (default: 120)
+```
+
+See [Configuration](/configuration/config-yaml) for the full list of options.

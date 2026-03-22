@@ -1,0 +1,136 @@
+---
+title: "Functional specs"
+description: "How to write functional requirements in ***plain, including FRID numbering, nested sections, code variables, and linked resources."
+---
+
+The `***functional specs***` section is the heart of a `.plain` file. It lists what your application must do, one requirement per list item. Each requirement receives a Functional Requirement ID (FRID) and is sent individually to the Codeplain code generation API.
+
+## Basic structure
+
+```plain
+***functional specs***
+
+- Display "hello, world"
+- Accept user input from the command line
+- Write the input to a log file
+```
+
+Each bullet point is a single functional requirement. Requirements are written in plain English — clear, direct, and unambiguous.
+
+## Functional Requirement IDs (FRIDs)
+
+Codeplain automatically numbers every requirement in `***functional specs***`. These numbers are called Functional Requirement IDs, or FRIDs.
+
+### Top-level numbering
+
+At the top level, FRIDs are simple integers:
+
+```plain
+***functional specs***
+
+- Display "hello, world"      ← FRID: 1
+- Accept user input            ← FRID: 2
+- Write the input to a file    ← FRID: 3
+```
+
+### Nested sections
+
+You can organize requirements into named sections using Markdown headings. Requirements inside a named section receive dotted FRIDs:
+
+```plain
+***functional specs***
+
+# User management
+
+- :User: can register with an email and password    ← FRID: 1.1
+- :User: can log in with their credentials          ← FRID: 1.2
+
+# Data export
+
+- :User: can export their data as CSV               ← FRID: 2.1
+- :User: can export their data as JSON              ← FRID: 2.2
+```
+
+<Note>
+  Section headings inside `***functional specs***` give the section an ID. The first section gets ID `1`, the second gets `2`, and so on. Requirements within a section are then numbered `<section-id>.<requirement-number>`.
+</Note>
+
+## Code variables
+
+Code variables let you parameterize a specification. Use the `:VariableName:` syntax inside your requirements — but unlike concept definitions, code variables are handled by the Liquid templating layer when they are set dynamically by templates.
+
+The colon-wrapping syntax is shared between concept names and code variables. The distinction is context: a concept is defined in `***definitions***`, while a code variable is a Liquid template variable resolved at render time.
+
+In practice, most users work with concepts rather than raw code variables. Templates in the Standard Template Library use code variables internally to adapt their content.
+
+## Linked resources
+
+You can attach files or other resources to a functional requirement using standard Markdown link syntax:
+
+```plain
+***functional specs***
+
+- Process the input data according to [the data schema](./schemas/input_schema.json)
+- Generate reports matching [this report template](./templates/report.html)
+```
+
+When Codeplain parses your `.plain` file, it detects these links and treats the referenced files as **linked resources** — they are read and attached to the requirement when it is sent to the code generation API, giving the LLM direct access to the file contents.
+
+<Warning>
+  Only **relative** links are allowed in functional specs. Absolute URLs and absolute file paths are rejected as a syntax error. All linked files must be relative to the `.plain` file's location.
+</Warning>
+
+### Link constraints
+
+- The link text must be specified: `[text](path)` — bare links are not allowed
+- Each link text must be unique across the file
+- Each target file path must map to exactly one link text
+
+## Rules and constraints
+
+- A `.plain` file that contains `***functional specs***` must also have at least one `***implementation reqs***` item (either directly or via an imported template). Codeplain raises a syntax error if functional requirements exist without implementation requirements.
+- You cannot import a module that itself contains `***functional specs***` — imported templates may only contain definitions, implementation reqs, and test reqs.
+- `***functional specs***` may only appear once per file.
+
+## Full example
+
+```plain array_sorting.plain
+---
+description: 'Array sorting application'
+import:
+  - python-console-app-template
+---
+
+***definitions***
+
+- :Array: is an array of integers received as input.
+
+***functional specs***
+
+- :App: should be extended to receive :Array:     ← FRID: 1
+- Sort :Array:                                      ← FRID: 2
+- Display :Array:                                   ← FRID: 3
+
+    ***acceptance tests***
+    - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9"
+    - When given input "1 2 3 4 5", :App: should output "1 2 3 4 5"
+```
+
+In this example:
+
+- FRID `1` asks the app to accept array input
+- FRID `2` asks for sorting
+- FRID `3` asks for display, and has two acceptance tests attached
+
+Codeplain generates code for FRID `1`, then `2`, then `3` — each time providing the full context (definitions, implementation reqs, test reqs, and all prior functional requirements) to the code generation API.
+
+## Relationship to other sections
+
+`***functional specs***` works together with:
+
+- **`***definitions***`** — provides the vocabulary (concepts) used in your requirements
+- **`***implementation reqs***`** — constrains how the code must be written (language, frameworks, file names)
+- **`***test reqs***`** — constrains how tests must be written
+- **`***acceptance tests***`** — verifies each requirement; nested inside individual list items
+
+See [Acceptance tests](/plain-language/acceptance-tests) for how to write verifiable criteria for each requirement.

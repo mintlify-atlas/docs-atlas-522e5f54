@@ -1,0 +1,148 @@
+---
+title: "Modules"
+description: "How to build multi-module ***plain projects using requires, required_concepts, and exported_concepts."
+---
+
+For larger applications, ***plain supports splitting your specification across multiple `.plain` files called **modules**. Each module is an independently generated unit of code. Modules can depend on each other, share concept definitions, and be composed into a complete application.
+
+## Two ways to reuse content
+
+***plain has two distinct mechanisms for reusing content across files:
+
+| Mechanism | Directive | Purpose |
+|---|---|---|
+| **Import** | `import` (frontmatter) | Pull in definitions and reqs from a template (Standard Template Library) |
+| **Require** | `requires` (frontmatter) | Declare a dependency on another module whose code must be generated first |
+
+<Note>
+  `import` is for reusing specification content (definitions, implementation reqs, test reqs). `requires` is for expressing build-order dependencies between modules whose code is generated separately.
+</Note>
+
+## Importing templates
+
+The `import` directive loads a named template from the Standard Template Library (or your own template directories). The imported file's definitions, implementation reqs, and test reqs are merged into your file before parsing.
+
+```plain
+---
+import:
+  - python-console-app-template
+---
+```
+
+Imported files **cannot** contain `***functional specs***`. They are purely specification helpers.
+
+```plain python-console-app-template.plain
+***definitions***
+
+- :App: is a console application.
+- :MainExecutableFile: is the main executable code file of :App:.
+
+***implementation reqs***
+
+- :Implementation: should be in Python.
+- :Implementation: should include :UnitTests: using Unittest framework!
+
+***test reqs***
+
+- :ConformanceTests: of :App: should be implemented in Python using Unittest framework.
+- :App: can be executed using the command "python :MainExecutableFile:".
+```
+
+<Warning>
+  Circular imports are detected and raise a syntax error. Module `A` cannot import module `B` if `B` already imports `A`.
+</Warning>
+
+## Requiring modules
+
+The `requires` directive declares that this module depends on another module. The required module's code is generated first, and the current module's code is generated on top of it.
+
+```plain hello_world_react.plain
+---
+description: '"hello, world" in Plain (React version)'
+import:
+  - typescript-react-app-template
+requires:
+  - typescript-react-app-boilerplate
+---
+
+***functional specs***
+
+- Display "hello, world"
+```
+
+Here, `typescript-react-app-boilerplate` is generated first. Its code forms the base on which the `hello_world_react` module's code is built.
+
+### Module order
+
+Required modules must form a linear dependency chain — Codeplain requires a fixed order of dependencies. A module with no `requires` directive must come first in the chain.
+
+```
+typescript-react-app-boilerplate   ← no requires (generated first)
+         ↓
+   hello_world_react               ← requires boilerplate
+```
+
+## Exported and required concepts
+
+When a module defines concepts (`:ConceptName:` in `***definitions***`) that other modules need to reference, it can **export** those concepts. Modules that depend on it can then declare that they **require** those concepts.
+
+### Exporting concepts
+
+In the providing module's frontmatter:
+
+```yaml
+exported_concepts:
+  - SomeConcept
+  - AnotherConcept
+```
+
+### Requiring concepts
+
+In the consuming module's frontmatter:
+
+```yaml
+required_concepts:
+  - SomeConcept
+```
+
+When Codeplain processes the consuming module, it looks up the exported definitions from the required module and makes them available as if they were defined locally. This allows your functional specs to reference concepts defined in another module.
+
+<Note>
+  Default built-in concepts (like `:App:`, `:Implementation:`, `:ConformanceTests:`) cannot be exported. Only user-defined concepts can be exported.
+</Note>
+
+## Project structure with modules
+
+A multi-module project follows this structure:
+
+```
+my-project/
+├── core.plain                  # Required module (no requires)
+├── api.plain                   # Requires core
+├── frontend.plain              # Requires api
+├── config.yaml
+├── build/
+│   ├── core/                   # Generated code for core module
+│   ├── api/                    # Generated code for api module
+│   └── frontend/               # Generated code for frontend module
+└── plain_modules/              # Generated module code (intermediate)
+```
+
+Each module gets its own build subfolder. Module metadata (including generated functionality hashes) is stored in `.codeplain/module_metadata.json` inside each build folder.
+
+## Incremental generation
+
+Codeplain tracks a hash of each module's specification and linked resources. If neither the specification nor the required modules' code has changed since the last run, Codeplain skips regeneration for that module — saving time and API calls.
+
+## Validation
+
+At parse time, Codeplain validates:
+
+- All `required_concepts` are satisfied — either defined locally, imported, or exported by a required module
+- No circular imports or circular `requires` chains exist
+- Imported modules do not contain `***functional specs***`
+- Every concept used in specs is defined somewhere in scope
+
+<Tip>
+  Start with a single `.plain` file. Only split into modules when your project grows large enough that separate generation contexts are beneficial.
+</Tip>

@@ -1,0 +1,126 @@
+---
+title: 'Logging'
+description: 'Configure log file output, log file location, and custom logging for Codeplain.'
+---
+
+Codeplain writes structured logs during every render. By default, logs are written to a file placed next to your `.plain` file. You can customize the filename, disable file logging, or supply a custom logging configuration.
+
+## Log file location
+
+The log file is always placed in the **same directory as your `.plain` file**, regardless of where you run `codeplain` from.
+
+For example, if your plain file is at `~/projects/my_app/my_app.plain`, the default log file is:
+
+```
+~/projects/my_app/codeplain.log
+```
+
+<Note>
+If a log file already exists at that path, it is overwritten each run.
+</Note>
+
+## Log file options
+
+### Changing the log file name
+
+Use `--log-file-name` (or set `log-file-name` in `config.yaml`) to change the filename:
+
+```bash
+codeplain my_app.plain --log-file-name render.log
+```
+
+```yaml
+# config.yaml
+log-file-name: render.log
+```
+
+The name is always resolved relative to the `.plain` file's directory — you cannot specify a path in a different directory using this option.
+
+### Disabling file logging
+
+Set `--no-log-to-file` to disable writing logs to a file entirely:
+
+```bash
+codeplain my_app.plain --no-log-to-file
+```
+
+```yaml
+# config.yaml
+log-to-file: false
+```
+
+<Warning>
+`--log-file-name` cannot be used together with `--no-log-to-file`. Codeplain will exit with an error if both are set.
+</Warning>
+
+## Crash log dumping
+
+When file logging is disabled and a render crashes, Codeplain still saves the buffered in-memory logs to disk so you have something to debug with. The crash log is written to the path that would have been used for the normal log file (derived from `--log-file-name` and the `.plain` file directory).
+
+<Tip>
+If you report a bug, attach the log file (or crash log) to your report. Error messages shown in the terminal reference the log file name to remind you.
+</Tip>
+
+## Custom logging configuration
+
+For advanced use cases you can supply a Python [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig)-compatible YAML file.
+
+### Default lookup
+
+Codeplain looks for `logging_config.yaml` in the current working directory by default. If the file exists, it is loaded automatically.
+
+### Specifying a custom path
+
+Use `--logging-config-path` to point to a different file:
+
+```bash
+codeplain my_app.plain --logging-config-path ./config/logging.yaml
+```
+
+```yaml
+# config.yaml
+logging-config-path: ./config/logging.yaml
+```
+
+### Example logging_config.yaml
+
+```yaml
+version: 1
+disable_existing_loggers: false
+formatters:
+  detailed:
+    format: '%(asctime)s %(levelname)s %(name)s %(message)s'
+handlers:
+  file:
+    class: logging.FileHandler
+    filename: codeplain.log
+    formatter: detailed
+loggers:
+  codeplain:
+    level: DEBUG
+    handlers: [file]
+    propagate: false
+```
+
+<Note>
+If the file at `--logging-config-path` does not exist, Codeplain continues with its default logging setup and does not raise an error.
+</Note>
+
+## Headless mode
+
+When running with `--headless`, the TUI is disabled and all output is suppressed except for a single render-started message printed to stdout. All logs are written exclusively to the log file.
+
+```bash
+codeplain my_app.plain --headless
+```
+
+This is useful for CI/CD pipelines and automated rendering workflows where terminal UI is not available.
+
+## Configuration reference
+
+| Option | Config key | Default | Description |
+|---|---|---|---|
+| `--log-to-file` / `--no-log-to-file` | `log-to-file` | `true` | Enable or disable file logging. |
+| `--log-file-name` | `log-file-name` | `codeplain.log` | Name of the log file (relative to the `.plain` file directory). |
+| `--logging-config-path` | `logging-config-path` | `logging_config.yaml` | Path to a custom `dictConfig`-compatible YAML logging configuration. |
+| `--headless` | `headless` | `false` | Disable TUI; write all output to the log file. |

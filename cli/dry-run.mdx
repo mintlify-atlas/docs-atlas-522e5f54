@@ -1,0 +1,124 @@
+---
+title: 'Dry run'
+description: 'Preview what Codeplain would render without making API calls or writing files, using --dry-run and --full-plain.'
+---
+
+Two flags let you inspect your spec and planned render before committing to any API usage or file writes:
+
+- `--dry-run` — shows which functionalities would be rendered and in what order.
+- `--full-plain` — prints the fully expanded `***plain` specification, showing every primitive that would be included for each module.
+
+Both flags cause the CLI to exit immediately after printing their output. No API calls are made, and no files are written.
+
+<Warning>
+  `--dry-run` and `--full-plain` are mutually exclusive. Using both at once is an error.
+</Warning>
+
+## `--dry-run`
+
+Prints the list of FRIDs that would be rendered, in render order, without calling the API or touching the build folder.
+
+```bash
+codeplain myapp.plain --dry-run
+```
+
+Example output:
+
+```text
+Printing dry run output...
+
+Functionalities to render:
+  1
+  2
+  3
+  auth.1
+  auth.2
+  payments.1
+```
+
+### Combining with render range
+
+`--dry-run` respects `--render-range` and `--render-from`, so you can preview exactly which FRIDs a partial render would cover:
+
+```bash
+# Preview what --render-range 2,4 would render
+codeplain myapp.plain --render-range 2,4 --dry-run
+
+# Preview what --render-from 3 would render
+codeplain myapp.plain --render-from 3 --dry-run
+```
+
+### When to use `--dry-run`
+
+- Verify that a new `--render-range` or `--render-from` value covers the FRIDs you intend.
+- Confirm the FRID order in a large or complex `.plain` file before a full render.
+- Sanity-check spec structure changes before spending API credits.
+
+## `--full-plain`
+
+Prints the complete, expanded `***plain` specification — the full context of all `***plain` primitives that would be included when rendering each module. This is the exact text sent to the API.
+
+```bash
+codeplain myapp.plain --full-plain
+```
+
+Example output:
+
+```text
+Full plain text:
+
+***plain
+
+## definitions
+- The system is a REST API built with FastAPI.
+
+## implementation reqs
+- Use async/await for all database calls.
+
+## functional specs
+1. User registration endpoint that accepts email and password.
+2. Login endpoint that returns a JWT token.
+...
+```
+
+### When to use `--full-plain`
+
+- Understand exactly which definitions, implementation requirements, and test requirements are being pulled into a render.
+- Debug unexpected AI output by checking the full context that was sent.
+- Audit template expansion when using custom templates.
+
+## Comparison
+
+| | `--dry-run` | `--full-plain` |
+|---|-------------|----------------|
+| Shows FRIDs to render | Yes | No |
+| Shows full spec text | No | Yes |
+| Respects `--render-range` | Yes | No |
+| Makes API calls | No | No |
+| Writes files | No | No |
+| Works with `--headless` | Yes | Yes |
+
+## Example workflow
+
+A typical inspection workflow before a large render:
+
+<Steps>
+  <Step title="Preview the render plan">
+    ```bash
+    codeplain myapp.plain --dry-run
+    ```
+    Confirm the list of FRIDs looks correct.
+  </Step>
+  <Step title="Inspect the full spec">
+    ```bash
+    codeplain myapp.plain --full-plain
+    ```
+    Check that definitions and requirements are expanded as expected.
+  </Step>
+  <Step title="Run the render">
+    ```bash
+    codeplain myapp.plain
+    ```
+    Proceed with confidence.
+  </Step>
+</Steps>

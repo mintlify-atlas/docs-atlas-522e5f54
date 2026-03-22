@@ -1,0 +1,134 @@
+---
+title: Introduction
+description: What Codeplain is, how it works, and the key concepts behind spec-driven code generation.
+---
+
+Codeplain is a code generation platform that turns software specifications written in ***plain into working, production-ready code. Instead of writing code directly, you describe what your application should do — and Codeplain generates the implementation.
+
+## What is ***plain?
+
+***plain (pronounced "triple-star plain") is a specification language designed for spec-driven development. It lets you express software requirements at any level of detail using natural language extended with a lightweight markdown-based syntax.
+
+A ***plain file is the source of truth for your application. It describes what the software should do, how it should be implemented, and how it should be tested — without being tied to any specific programming language or framework.
+
+## How Codeplain works
+
+The core workflow is straightforward:
+
+<Steps>
+  <Step title="Write a .plain specification">
+    Create a `.plain` file that describes your application's requirements using ***plain syntax.
+  </Step>
+  <Step title="Run codeplain">
+    Execute `codeplain yourfile.plain`. The CLI sends your spec to the Codeplain API, which uses large language models to generate code that satisfies your requirements.
+  </Step>
+  <Step title="Get working code">
+    Generated code lands in the `plain_modules/` directory. If you've configured test scripts, Codeplain runs them automatically to verify the output matches your spec.
+  </Step>
+</Steps>
+
+```
+Write spec (.plain) → codeplain → Generated code + tests
+```
+
+## Key concepts
+
+### Functional Requirements and FRIDs
+
+Each item in the `***functional specs***` section of a `.plain` file is a **functional requirement**. Every functional requirement is assigned a **FRID** (Functional Requirement ID) — a numeric identifier used internally to track which requirements have been rendered.
+
+FRIDs let you render specific subsets of your spec, or resume a partially completed render:
+
+```bash
+# Render only requirement 3
+codeplain myapp.plain --render-range 3
+
+# Render requirements 2 through 5
+codeplain myapp.plain --render-range 2,5
+
+# Resume from requirement 4 onward
+codeplain myapp.plain --render-from 4
+```
+
+### Modules
+
+Codeplain renders code into **modules** — isolated units of generated code stored in the `plain_modules/` directory. Each module corresponds to a section of your spec and is rendered independently. This allows incremental generation and re-rendering of specific parts without affecting the rest.
+
+### Templates
+
+Templates are reusable ***plain building blocks imported into your spec. A template can define the base structure of a Python console app, a REST API, a React component, and so on. The **standard template library** ships with Codeplain and provides templates for common application types.
+
+Import templates in the YAML frontmatter of your `.plain` file:
+
+```yaml
+---
+description: 'My application'
+import:
+  - python-console-app-template
+---
+```
+
+You can also place custom templates in your project directory to override or extend the standard library.
+
+### Acceptance tests
+
+Each functional requirement can include **acceptance tests** — concrete, verifiable conditions that the generated code must satisfy. Codeplain uses these to validate that the generated implementation actually matches your intent.
+
+```plain
+***functional specs***
+
+- Display "hello, world"
+
+  ***acceptance tests***
+
+  - :App: should exit with status code 0 indicating successful execution.
+  - :App: should complete execution in under 1 second.
+```
+
+### The .plain file structure
+
+A `.plain` file has YAML frontmatter followed by labelled sections:
+
+| Section | Purpose |
+|---|---|
+| `***definitions***` | Define reusable concepts using `:ConceptName:` notation |
+| `***implementation reqs***` | Specify implementation details (language, frameworks, file names) |
+| `***test reqs***` | Specify testing requirements (test framework, coverage expectations) |
+| `***functional specs***` | Describe what the application should do (with optional acceptance tests) |
+
+```plain
+---
+description: 'Example application'
+import:
+  - python-console-app-template
+---
+
+***definitions***
+- :Array: is an array of integers received as input.
+
+***implementation reqs***
+- :MainExecutableFile: of :App: should be called "main.py".
+
+***functional specs***
+- Sort :Array: and display it.
+
+  ***acceptance tests***
+  - When given input "5 2 8 1 9", :App: should output "1 2 5 8 9".
+```
+
+## What Codeplain is not
+
+- It is not a text-to-code copilot that completes lines inside an editor.
+- It does not modify code you have already written.
+- It does not operate without a Codeplain API key (contact [support@codeplain.ai](mailto:support@codeplain.ai) to obtain one).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run the hello world example and see generated code in under 10 minutes.
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the CLI, set your API key, and verify the setup.
+  </Card>
+</CardGroup>

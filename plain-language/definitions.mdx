@@ -1,0 +1,128 @@
+---
+title: "Definitions"
+description: "How to define named concepts in ***plain using the :ConceptName: syntax."
+---
+
+The `***definitions***` section is where you establish the vocabulary of your specification. Every named concept you use in your requirements must be defined here — or inherited through an imported template.
+
+## The `:ConceptName:` syntax
+
+Concepts in ***plain are written with colons on both sides:
+
+```plain
+:App:
+:MainExecutableFile:
+:Array:
+:ConformanceTests:
+```
+
+This colon-wrapping syntax marks a token as a defined concept, not just prose. Codeplain tracks which concepts have been defined and validates that every concept used in the specification is properly defined before code generation begins.
+
+<Warning>
+  If you reference a concept in your `***functional specs***` or other sections without defining it, Codeplain will raise a validation error listing all missing concept definitions.
+</Warning>
+
+## Writing a definition
+
+Each definition is a list item in the `***definitions***` section. The item must include the concept name (colon-wrapped) and a description:
+
+```plain
+***definitions***
+
+- :App: is a console application.
+- :MainExecutableFile: is the main executable code file of :App:.
+- :Array: is an array of integers received as input.
+```
+
+Definitions can reference other concepts:
+
+```plain
+***definitions***
+
+- :App: is a web application.
+- :Database: is the persistence layer used by :App:.
+- :User: is a registered account in :Database:.
+```
+
+## Ordering
+
+The `***definitions***` section must appear **before any other section** in the file body. This rule applies both to your own file and to imported templates — definitions are always processed first.
+
+```plain
+---
+import:
+  - python-console-app-template
+---
+
+***definitions***          ← must come first
+
+- :Array: is an array of integers received as input.
+
+***functional specs***     ← comes after definitions
+
+- Sort :Array:
+```
+
+## Concepts from imported templates
+
+When you `import` a template, its definitions are merged into your file's definitions. You do not need to redefine concepts that the template already defines.
+
+For example, `python-console-app-template` defines `:App:` and `:MainExecutableFile:`, so a file that imports it can use those concepts immediately:
+
+```plain
+---
+import:
+  - python-console-app-template
+---
+
+***functional specs***
+
+- :MainExecutableFile: of :App: should be called "hello_world.py".
+```
+
+<Tip>
+  Check the [Standard Template Library](/guides/standard-template-library) to see which concepts each template defines before adding your own definitions.
+</Tip>
+
+## Concepts from required modules
+
+In a multi-module project, a module can export concepts using `exported_concepts` in its frontmatter. Modules that `require` it gain access to those concepts without redefining them.
+
+See [Modules](/plain-language/modules) for details on how `requires` and `exported_concepts` work together.
+
+## Validation
+
+Codeplain validates concept usage at parse time:
+
+- Every `:ConceptName:` that appears in any section must be defined in `***definitions***` (either directly, through an import, or through a required module's exported concepts)
+- Duplicate concept definitions are not allowed within the same scope
+- Definitions are sorted alphabetically before being passed to the code generation API
+
+## Examples from the Standard Template Library
+
+<AccordionGroup>
+  <Accordion title="Python console app">
+    ```plain
+    ***definitions***
+
+    - :App: is a console application.
+    - :MainExecutableFile: is the main executable code file of :App:.
+    ```
+  </Accordion>
+  <Accordion title="Go console app">
+    ```plain
+    ***definitions***
+
+    - :App: is a console application.
+    - :MainExecutableFile: is the main executable code file of :App:.
+    - :ConformanceTestsExecutableFile: is the main executable code file of :ConformanceTests:.
+    ```
+  </Accordion>
+  <Accordion title="TypeScript React app">
+    ```plain
+    ***definitions***
+
+    - :App: is a web application.
+    ```
+  </Accordion>
+</AccordionGroup>

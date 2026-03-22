@@ -1,97 +1,87 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Codeplain"
+description: "Generate production-ready software from plain language specifications"
 ---
 
-## Setting up
+## What is Codeplain?
 
-Get your documentation site up and running in minutes.
+Codeplain is an AI-powered code generation platform that turns **\*\*\*plain** specifications — written in plain language — into production-ready software. Describe what you want your software to do, and Codeplain handles the implementation.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+The `codeplain` CLI connects to the Codeplain API, reads your `.plain` specification file, and generates fully functional, tested code — one requirement at a time.
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get from zero to generated code in under 10 minutes
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Installation" icon="download" href="/installation">
+    Install the CLI and set up your API key
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="The ***plain Language" icon="file-lines" href="/plain-language/overview">
+    Learn how to write plain language specifications
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="CLI Reference" icon="terminal" href="/cli/overview">
+    Explore all commands and options
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How it works
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Write a .plain specification">
+    Describe your application's requirements in ***plain — a structured plain-language format with definitions, functional specs, and acceptance tests.
+  </Step>
+  <Step title="Run the codeplain CLI">
+    Execute `codeplain myapp.plain` and watch the interactive TUI as Codeplain generates each functional requirement.
+  </Step>
+  <Step title="Get production-ready code">
+    Code is generated into the `plain_modules/` build folder, along with unit tests and conformance tests validated against your acceptance criteria.
+  </Step>
+</Steps>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Key features
 
-## Need inspiration?
+<CardGroup cols={2}>
+  <Card title="Plain language specs" icon="pen-to-square">
+    Write requirements in structured plain English — no code required to describe what you want built
+  </Card>
+  <Card title="Multi-language support" icon="code">
+    Generate Python, Golang, and React/TypeScript applications from the same specification format
+  </Card>
+  <Card title="Automated testing" icon="flask">
+    Unit tests and conformance tests are generated and validated automatically during each render
+  </Card>
+  <Card title="Modular specifications" icon="puzzle-piece">
+    Compose complex applications from reusable modules and the standard template library
+  </Card>
+  <Card title="Incremental rendering" icon="arrows-rotate">
+    Re-render specific requirements or resume from a particular point without regenerating everything
+  </Card>
+  <Card title="CI/CD integration" icon="gears">
+    Headless mode enables fully automated code generation pipelines with no interactive UI
+  </Card>
+</CardGroup>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Example: Hello World in ***plain
+
+```plain hello_world_python.plain
+---
+description: 'A simple Hello World Python application'
+import:
+  - python-console-app-template
+---
+
+***functional specs***
+- :App: should print "Hello, World!" to the console
+```
+
+Run it with:
+
+```bash
+codeplain hello_world_python.plain
+```
+
+The generated code appears in `plain_modules/hello_world_python/` and the final build in `build/`.
+
+<Note>
+  You need a Codeplain API key to generate code. Contact [support@codeplain.ai](mailto:support@codeplain.ai) to get yours.
+</Note>

@@ -1,0 +1,155 @@
+---
+title: 'All options'
+description: 'Complete reference for every Codeplain CLI flag, grouped by category.'
+---
+
+All options can be supplied on the command line or stored in `config.yaml`. Command-line flags always take precedence.
+
+## Positional argument
+
+<ParamField path="filename" type="string" required>
+  Path to the `.plain` specification file to render. The directory containing this file has the highest precedence for template loading — place custom templates here to override defaults.
+</ParamField>
+
+## Output and build
+
+<ParamField query="--build-folder" type="string" default="plain_modules">
+  Folder where generated source code modules are written. Must not be the same value as `--build-dest`.
+</ParamField>
+
+<ParamField query="--base-folder" type="string">
+  Base folder for build files. When set, build output is placed inside this folder.
+</ParamField>
+
+<ParamField query="--copy-build" type="boolean" default="false">
+  If set, copies the rendered contents of `--build-folder` to `--build-dest` after a successful render.
+</ParamField>
+
+<ParamField query="--build-dest" type="string" default="dist">
+  Destination folder used when `--copy-build` is set. Must not be the same value as `--build-folder`.
+</ParamField>
+
+<ParamField query="--template-dir" type="string">
+  Path to a custom template directory. Templates are searched in this order:
+  1. Directory containing the `.plain` file.
+  2. This custom directory.
+  3. Built-in `standard_template_library`.
+</ParamField>
+
+<ParamField query="--verbose" type="boolean" default="false">
+  Enable verbose output. Short form: `-v`.
+</ParamField>
+
+## Rendering
+
+<ParamField query="--render-range" type="string">
+  Render a specific range of functionalities. Accepts a single FRID (`"3"`) or a comma-separated pair (`"2,5"`). Range is inclusive. Mutually exclusive with `--render-from`.
+
+  See [Render range](/cli/render-range) for details.
+</ParamField>
+
+<ParamField query="--render-from" type="string">
+  Resume rendering from a specific FRID onwards (inclusive). Renders from the given FRID to the end of the spec. Mutually exclusive with `--render-range`.
+
+  See [Render range](/cli/render-range) for details.
+</ParamField>
+
+<ParamField query="--force-render" type="boolean" default="false">
+  Force re-render of all required modules, ignoring any cached state.
+</ParamField>
+
+<ParamField query="--dry-run" type="boolean" default="false">
+  Preview the generation plan without making any API calls or writing any files. Mutually exclusive with `--full-plain`.
+
+  See [Dry run](/cli/dry-run) for details.
+</ParamField>
+
+<ParamField query="--full-plain" type="boolean" default="false">
+  Print the full expanded `***plain` specification before code generation, showing all primitives that will be included. Mutually exclusive with `--dry-run`.
+
+  See [Dry run](/cli/dry-run) for details.
+</ParamField>
+
+<ParamField query="--render-machine-graph" type="boolean" default="false">
+  Render the state machine graph.
+</ParamField>
+
+<ParamField query="--headless" type="boolean" default="false">
+  Run without the TUI and suppress all terminal output except a single render-started line. All logs are written to the log file.
+
+  See [Headless mode](/cli/headless-mode) for details.
+</ParamField>
+
+## Testing
+
+<ParamField query="--unittests-script" type="string">
+  Path to a shell script that runs unit tests on the generated code. The script receives the build folder path as its first argument (e.g., `plain_modules`).
+</ParamField>
+
+<ParamField query="--conformance-tests-folder" type="string" default="conformance_tests">
+  Folder containing conformance test files.
+</ParamField>
+
+<ParamField query="--conformance-tests-script" type="string">
+  Path to a shell script that runs conformance tests. The script receives two arguments:
+  1. Path to the generated source folder (e.g., `plain_modules/module_name`).
+  2. Path to the conformance tests subfolder (e.g., `conformance_tests/subfoldername`).
+</ParamField>
+
+<ParamField query="--prepare-environment-script" type="string">
+  Path to a shell script that prepares the test environment. Receives the source code folder path as its first argument.
+</ParamField>
+
+<ParamField query="--test-script-timeout" type="number" default="120">
+  Timeout in seconds for test scripts. Applies to unit tests, conformance tests, and environment preparation scripts.
+</ParamField>
+
+<ParamField query="--copy-conformance-tests" type="boolean" default="false">
+  If set, copies the conformance tests folder to `--conformance-tests-dest` after a successful render. Requires `--conformance-tests-script` to be set.
+</ParamField>
+
+<ParamField query="--conformance-tests-dest" type="string" default="dist_conformance_tests">
+  Destination folder used when `--copy-conformance-tests` is set. Must not be the same value as `--conformance-tests-folder`.
+</ParamField>
+
+## API
+
+<ParamField query="--api" type="string" default="https://api.codeplain.ai">
+  Base URL for the Codeplain API. Override this only when targeting a private or staging deployment.
+</ParamField>
+
+<ParamField query="--api-key" type="string" default="$CODEPLAIN_API_KEY">
+  API key used to authenticate with the Codeplain API. Defaults to the value of the `CODEPLAIN_API_KEY` environment variable.
+</ParamField>
+
+## Logging
+
+<ParamField query="--log-to-file / --no-log-to-file" type="boolean" default="true">
+  Enable or disable writing logs to a file. Disable with `--no-log-to-file`. When disabled, `--log-file-name` cannot be used.
+</ParamField>
+
+<ParamField query="--log-file-name" type="string" default="codeplain.log">
+  Name of the log file. Always resolved relative to the directory of the `.plain` file. If the file already exists it is overwritten. Cannot be used when `--no-log-to-file` is set.
+</ParamField>
+
+<ParamField query="--logging-config-path" type="string" default="logging_config.yaml">
+  Path to a YAML logging configuration file. When the file exists at this path, it is loaded with Python's `logging.config.dictConfig`.
+</ParamField>
+
+## Configuration
+
+<ParamField query="--config-name" type="string" default="config.yaml">
+  Name of the configuration file to look for. The CLI searches in the plain file directory first, then the current working directory. Raises an error if the file is found in both locations with different content.
+</ParamField>
+
+## Mutual exclusions and constraints
+
+<Warning>
+  The following flag combinations are not allowed and will cause the CLI to exit with an error:
+  - `--render-range` and `--render-from` are mutually exclusive.
+  - `--full-plain` and `--dry-run` are mutually exclusive.
+  - `--build-folder` and `--build-dest` must be different values.
+  - `--conformance-tests-folder` and `--conformance-tests-dest` must be different values.
+  - `--copy-conformance-tests` requires `--conformance-tests-script`.
+  - `--log-file-name` cannot be used when `--no-log-to-file` is set.
+</Warning>

@@ -1,0 +1,109 @@
+---
+title: "Overview"
+description: "What ***plain is, why it exists, and how it abstracts LLM complexity for code generation."
+---
+
+***plain is a lightweight specification language designed for describing software requirements in a structured, unambiguous way. You write what your application should do — Codeplain translates those specifications into working code using large language models.
+
+## What is ***plain?
+
+***plain (pronounced "plain") sits between human intent and machine-generated code. Instead of writing prompts or wrestling with LLM context windows, you write a `.plain` file that captures your application's requirements in a precise, repeatable format.
+
+Codeplain reads your `.plain` file, sends structured specifications to its code generation API, and produces runnable code — including unit tests and conformance tests.
+
+<CardGroup cols={2}>
+  <Card title="File structure" icon="file-lines" href="/plain-language/file-structure">
+    Anatomy of a `.plain` file — frontmatter, sections, and headings.
+  </Card>
+  <Card title="Definitions" icon="book" href="/plain-language/definitions">
+    Define the concepts and vocabulary your specification uses.
+  </Card>
+  <Card title="Functional specs" icon="list-check" href="/plain-language/functional-specs">
+    Describe what your application must do, requirement by requirement.
+  </Card>
+  <Card title="Acceptance tests" icon="circle-check" href="/plain-language/acceptance-tests">
+    Specify exactly how each requirement should be verified.
+  </Card>
+</CardGroup>
+
+## Why ***plain exists
+
+Using LLMs for code generation directly has real challenges:
+
+- Prompts are unstructured and hard to version-control
+- Large context windows are expensive and error-prone
+- Generated code is difficult to regenerate incrementally
+- There is no standard way to express requirements, tests, or implementation constraints
+
+***plain solves these problems by giving you a structured, declarative format that Codeplain can parse, validate, and feed to its code generation service in a controlled, repeatable way.
+
+## Key concepts
+
+| Concept | Description |
+|---|---|
+| `.plain` file | The specification file for your application or module |
+| Frontmatter | YAML block at the top of a `.plain` file for metadata and directives |
+| Definitions | Named concepts your specification refers to (`:ConceptName:` syntax) |
+| Functional specs | Requirements describing what the application must do |
+| FRIDs | Functional Requirement IDs — auto-numbered identifiers for each requirement |
+| Acceptance tests | Verifiable criteria nested under each functional requirement |
+| Modules | Separate `.plain` files that can `require` or `import` each other |
+| Templates | Pre-built `.plain` files in the Standard Template Library |
+
+## A minimal example
+
+Here is a complete `.plain` file for a "hello, world" Python application:
+
+```plain hello_world_python.plain
+---
+description: '"hello, world" in Plain (Python version)'
+import:
+  - python-console-app-template
+---
+
+***implementation reqs***
+
+- :MainExecutableFile: of :App: should be called "hello_world.py".
+
+***functional specs***
+
+- Display "hello, world"
+
+  ***acceptance tests***
+
+  - :App: should exit with status code 0 indicating successful execution.
+
+  - :App: should complete execution in under 1 second.
+```
+
+This file:
+
+1. Imports `python-console-app-template` from the Standard Template Library, which brings in definitions for `:App:` and `:MainExecutableFile:`, plus Python implementation and test requirements
+2. Adds one implementation requirement specific to this application
+3. Declares one functional specification — displaying "hello, world"
+4. Attaches two acceptance tests to verify that requirement
+
+<Note>
+  The `***acceptance tests***` subsection is nested inside the list item for the functional requirement it belongs to. Indentation is meaningful here — see [Acceptance tests](/plain-language/acceptance-tests) for details.
+</Note>
+
+## How Codeplain uses your `.plain` file
+
+<Steps>
+  <Step title="Parse">
+    Codeplain reads your `.plain` file, validates its structure, resolves imports, and builds a structured representation of all your requirements.
+  </Step>
+  <Step title="Assign FRIDs">
+    Each item in `***functional specs***` receives a Functional Requirement ID (FRID) — `1`, `2`, `3` at the top level, or `1.1`, `1.2` inside named sections.
+  </Step>
+  <Step title="Generate code">
+    Codeplain sends each FRID's full context — definitions, implementation requirements, and the functional requirement itself — to the code generation API.
+  </Step>
+  <Step title="Verify">
+    Generated code is validated against unit tests and conformance tests derived from your acceptance tests.
+  </Step>
+</Steps>
+
+## Next steps
+
+Start with the [file structure](/plain-language/file-structure) page to understand the anatomy of a `.plain` file, then move on to [definitions](/plain-language/definitions) and [functional specs](/plain-language/functional-specs).
