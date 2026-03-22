@@ -7,7 +7,7 @@ This guide walks you through creating your first ***plain project from scratch.
 
 <Note>
   Before starting, make sure you have:
-  - Met all [prerequisites](/installation#prerequisites) (Python 3.11+)
+  - Met all [system requirements](/installation#system-requirements) (Python 3.11)
   - Completed the [installation steps](/installation)
   - Set your `CODEPLAIN_API_KEY` environment variable
 </Note>
@@ -74,20 +74,20 @@ Copy the appropriate test scripts into your project directory. These shell scrip
 <Tabs>
   <Tab title="Python">
     ```bash
-    cp /path/to/plain2code_client/test_scripts/run_unittests_python.sh ./
-    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_python.sh ./
+    cp /path/to/codeplain/test_scripts/run_unittests_python.sh ./
+    cp /path/to/codeplain/test_scripts/run_conformance_tests_python.sh ./
     ```
   </Tab>
   <Tab title="Go">
     ```bash
-    cp /path/to/plain2code_client/test_scripts/run_unittests_golang.sh ./
-    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_golang.sh ./
+    cp /path/to/codeplain/test_scripts/run_unittests_golang.sh ./
+    cp /path/to/codeplain/test_scripts/run_conformance_tests_golang.sh ./
     ```
   </Tab>
   <Tab title="React (TypeScript)">
     ```bash
-    cp /path/to/plain2code_client/test_scripts/run_unittests_react.sh ./
-    cp /path/to/plain2code_client/test_scripts/run_conformance_tests_cypress.sh ./
+    cp /path/to/codeplain/test_scripts/run_unittests_react.sh ./
+    cp /path/to/codeplain/test_scripts/run_conformance_tests_cypress.sh ./
     ```
   </Tab>
 </Tabs>
@@ -140,12 +140,14 @@ Codeplain will:
   Rendering takes a few minutes because each functional spec is sent to the Codeplain API. You can watch progress in real time with `verbose: true`.
 </Tip>
 
-Once rendering completes, run the generated application:
+Once rendering completes, run the generated application (from the `build/` folder, which is the copy destination set by `build-dest: build`):
 
 ```bash
 cd build
-python my_app.py
+python <MainExecutableFile>
 ```
+
+The main executable file name depends on what you specified in your `***implementation reqs***` section.
 
 </Steps>
 
@@ -186,8 +188,12 @@ Run it with:
 
 ```bash
 cd examples/example_hello_world_python
-python ../../plain2code.py hello_world_python.plain
+codeplain hello_world_python.plain
 ```
+
+<Note>
+  If you're running from source without installing via pip or uv, use `python ../../plain2code.py hello_world_python.plain` instead.
+</Note>
 
 ## Next steps
 

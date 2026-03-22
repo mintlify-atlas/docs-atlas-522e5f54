@@ -88,7 +88,10 @@ The CLI surfaces distinct error types to help you diagnose failures quickly:
 | `OutdatedClientVersion` | Your `codeplain` package is too old. Run `uv tool upgrade codeplain`. |
 | `InvalidFridArgument` | `--render-range` or `--render-from` references a FRID that does not exist. |
 | `PlainSyntaxError` | Your `.plain` file contains a syntax error. |
+| `ConflictingRequirements` | Two or more requirements in your spec contradict each other. |
+| `FunctionalRequirementTooComplex` | A single requirement is too complex to render atomically. Consider breaking it down. |
 | `MissingPreviousFunctionalitiesError` | A required earlier functionality has not been rendered yet. |
+| `MissingResource` | A linked resource file referenced in the spec cannot be found. |
 | `CreditBalanceTooLow` | Your account has insufficient credits. |
 | `NetworkConnectionError` | Cannot reach the API. Check your internet connection. |
 | `InternalServerError` | Unexpected server-side error. Send `codeplain.log` to support@codeplain.ai. |

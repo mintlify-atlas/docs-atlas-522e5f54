@@ -117,18 +117,21 @@ A multi-module project follows this structure:
 
 ```
 my-project/
-├── core.plain                  # Required module (no requires)
-├── api.plain                   # Requires core
-├── frontend.plain              # Requires api
+├── core.plain                     # Required module (no requires)
+├── api.plain                      # Requires core
+├── frontend.plain                 # Requires api
 ├── config.yaml
-├── build/
-│   ├── core/                   # Generated code for core module
-│   ├── api/                    # Generated code for api module
-│   └── frontend/               # Generated code for frontend module
-└── plain_modules/              # Generated module code (intermediate)
+├── plain_modules/                 # Generated module source code
+│   ├── core/                      # Generated code for core module
+│   ├── api/                       # Generated code for api module
+│   └── frontend/                  # Generated code for frontend module
+└── conformance_tests/             # Generated conformance test code
+    ├── core/
+    ├── api/
+    └── frontend/
 ```
 
-Each module gets its own build subfolder. Module metadata (including generated functionality hashes) is stored in `.codeplain/module_metadata.json` inside each build folder.
+Each module gets its own subfolder in `plain_modules/`. Module metadata (including generated functionality hashes) is stored in `.codeplain/module_metadata.json` inside each module subfolder.
 
 ## Incremental generation
 

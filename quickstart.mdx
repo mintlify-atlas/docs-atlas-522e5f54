@@ -44,8 +44,8 @@ To persist it across sessions, add that line to your `~/.bashrc` or `~/.zshrc`.
 ## Step 3 — Clone the repository and navigate to the example
 
 ```bash
-git clone https://github.com/Codeplain-ai/plain2code_client.git
-cd plain2code_client/examples/example_hello_world_python
+git clone https://github.com/Codeplain-ai/codeplain.git
+cd codeplain/examples/example_hello_world_python
 ```
 
 This directory contains:
@@ -113,10 +113,10 @@ codeplain hello_world_python.plain --headless
 
 ## Step 6 — Run the generated code
 
-Once rendering completes, a Python file has been generated. The example's `config.yaml` is configured with `copy-build: true`, so the final output is also copied to a `build/` folder:
+Once rendering completes, a Python file has been generated in `plain_modules/hello_world_python/`:
 
 ```bash
-cd build
+cd plain_modules/hello_world_python
 python hello_world.py
 ```
 

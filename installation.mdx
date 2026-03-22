@@ -55,8 +55,8 @@ uv tool upgrade codeplain
 Clone the repository and install dependencies manually:
 
 ```bash
-git clone https://github.com/Codeplain-ai/plain2code_client.git
-cd plain2code_client
+git clone https://github.com/Codeplain-ai/codeplain.git
+cd codeplain
 
 # (Recommended) create a virtual environment
 python -m venv .venv
@@ -76,10 +76,10 @@ The `codeplain` command alias is only registered when installing via pip or uv.
 
 ### One-line installer (bash)
 
-The repository ships a convenience script that installs `uv` if needed, installs codeplain, and walks you through API key setup interactively:
+The repository includes a convenience installer script (`install/bash/install.sh`) that installs `uv` if needed, installs codeplain, and walks you through API key setup interactively. Run it from the cloned repository:
 
 ```bash
-bash <(curl -fsSL https://codeplain.ai/install.sh)
+bash install/bash/install.sh
 ```
 
 ## Set up your API key
